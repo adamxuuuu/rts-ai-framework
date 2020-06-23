@@ -73,7 +73,7 @@ nbactions.xml
 nb-configuration.xml
 
 ##############################
-## Visual Studio Code
+## visual Studio Code
 ##############################
 .vscode/
 .code-workspace
