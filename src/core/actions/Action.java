@@ -1,8 +1,8 @@
-package core.commands;
+package core.actions;
 
 import core.game.GameState;
 
-public interface Command {
+public interface Action {
 
     /**
      * Execute this command under game state X
@@ -12,6 +12,6 @@ public interface Command {
      */
     boolean exec(GameState gs);
 
-    Command copy();
+    Action copy();
 
 }

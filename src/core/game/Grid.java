@@ -1,9 +1,11 @@
-package core.level;
+package core.game;
 
+import core.units.Entity;
 import core.units.Unit;
+import utils.Vector2d;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class Grid {
@@ -15,7 +17,7 @@ public class Grid {
     private float[][] heightMap;
 
     // Units
-    private final List<Unit> allUnits = new ArrayList<>();
+    private final Map<Long, Unit> entities = new HashMap<>();
 
     public Grid() {
     }
@@ -32,15 +34,14 @@ public class Grid {
      * Add a {@link Unit} to the map
      *
      * @param addUnit unit
-     * @return true if adding is successful
      */
     public void addUnit(Unit addUnit) {
-        for (Unit unit : allUnits) {
-            if (unit.getPosition().equals(addUnit.getPosition())) {
-                return;
-            }
-        }
-        allUnits.add(addUnit);
+//        for (Unit unit : entities.values()) {
+//            if (unit.getGridPos().equals(addUnit.getGridPos())) {
+//                return;
+//            }
+//        }
+        entities.put(addUnit.getEntityId(), addUnit);
     }
 
     /**
@@ -49,7 +50,7 @@ public class Grid {
      * @param u unit
      */
     public void removeUnit(Unit u) {
-        allUnits.remove(u);
+        entities.remove(u.getEntityId());
     }
 
     public Grid copy() {
@@ -64,8 +65,9 @@ public class Grid {
             }
         }
 
-        for (Unit u : allUnits) {
-            copyGrid.allUnits.add((Unit) u.copy(false));
+        for (Unit u : entities.values()) {
+            Unit copyUnit = (Unit) u.copy();
+            copyGrid.entities.put(copyUnit.getEntityId(), copyUnit);
         }
 
         return copyGrid;
@@ -82,6 +84,20 @@ public class Grid {
         }
     }
 
+    public Map<Long, Unit> getEntities() {
+        return entities;
+    }
+
+    /**
+     * Get the game entity with Id
+     *
+     * @param eId entity Id
+     * @return the entity or null if the entity doesn't exist
+     */
+    public Entity getEntity(long eId) {
+        return entities.get(eId);
+    }
+
     public int getHeight() {
         return height;
     }
@@ -94,7 +110,15 @@ public class Grid {
         return heightMap[x][y];
     }
 
-    public List<Unit> getAllUnits() {
-        return allUnits;
+    /**
+     * Move a unit in x/y direction
+     *
+     * @param u  {@link Unit} to move
+     * @param dx movement in x
+     * @param dy movement in y
+     */
+    public void moveUnit(Unit u, int dx, int dy) {
+        Vector2d p = u.getScreenPos();
+        u.setScreenPos(new Vector2d(p.x + dx, p.y + dy));
     }
 }

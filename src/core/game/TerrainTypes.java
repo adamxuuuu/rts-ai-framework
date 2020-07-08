@@ -1,4 +1,4 @@
-package core.level;
+package core.game;
 
 public class TerrainTypes {
 }

@@ -1,13 +1,12 @@
 package core.game;
 
-import core.level.Grid;
 import players.Agent;
+import players.HumanAgent;
+import utils.FPSCounter;
 import visual.GUI;
 
-import java.util.ArrayList;
 import java.util.Random;
 
-import static utils.Constants.SECOND_LONG;
 import static utils.Constants.TIME_PER_FRAME;
 
 public class Game {
@@ -20,7 +19,8 @@ public class Game {
     private Random rnd;
 
     // List of players
-    private ArrayList<Agent> players;
+    private Agent[] players;
+    private int numPlayers;
 
     /**
      * Default constructor
@@ -28,14 +28,17 @@ public class Game {
     public Game() {
     }
 
-    public void init() {
+    /**
+     * Default initialisation
+     */
+    public void init(Agent[] players) {
         gs = new GameState();
+
+        this.players = players;
     }
 
     public void run(GUI frame) {
-        // FPS counter
-        long lastFpsCheck = 0L;
-        int frames = 0;
+        FPSCounter fpsCounter = new FPSCounter();
 
         // Main game loop
         long previous = System.nanoTime();
@@ -46,34 +49,30 @@ public class Game {
             previous = current;
             lag += elapsed;
 
-            boolean gameOver = gameOver();
-
             // Update game state according to delta time since
             while (lag >= TIME_PER_FRAME) {
                 update(elapsed);
                 lag -= TIME_PER_FRAME;
-                frames++;
+                fpsCounter.count();
             }
 
+            boolean gameOver = gameOver();
             if (gameOver) {
+                //TODO Post game processing
                 break;
             }
 
-            // Update graphics at a steady rate (hopefully)
+            // Render as fast as possible (hopefully)
             frame.render(getGameState());
 
-
-            if (System.nanoTime() > lastFpsCheck + SECOND_LONG) {
-                lastFpsCheck = System.nanoTime();
-                System.out.println("FPS: " + frames);
-                frames = 0;
-            }
+            // Print FPS if 1 second past
+            fpsCounter.printResult(System.nanoTime());
         }
     }
 
     private void update(double elapsed) {
         // game update
-
+        gs.update(elapsed);
         // increment tick
         gs.tick();
     }
@@ -90,9 +89,24 @@ public class Game {
     }
 
     /**
-     * @return the game state.
+     * @return a copy of the current game state.
      */
     private GameState getGameState() {
-        return gs;
+        //TODO return a copy
+        return gs; // .copy();
+    }
+
+    /**
+     * Return the human player
+     *
+     * @return the human player
+     */
+    public Agent getHuman() {
+        for (Agent ag : players) {
+            if (ag instanceof HumanAgent) {
+                return ag;
+            }
+        }
+        return null;
     }
 }

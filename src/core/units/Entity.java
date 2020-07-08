@@ -4,51 +4,64 @@ import utils.Vector2d;
 
 public abstract class Entity {
 
+    static long nextId = 0;
+
     /**
      * Unique ID of this entity.
      */
-    int entityId = -1;
+    long entityId = -1;
 
     /**
-     * Id of the tribe this actor belongs to.
+     * Id of the player this entity belongs to.
      */
-    protected int commanderId = -1;
+    protected int agentId = -1;
 
     /**
-     * Position of this actor in the board
+     * Position of this entity in the grid
      */
-    protected Vector2d position;
+    protected Vector2d gridPos;
+
+    /**
+     * Position of this entity in the screen
+     */
+    protected Vector2d screenPos;
 
     /**
      * Method to provide a copy of this actor.
      *
-     * @param hideInfo indicates if information of this actor should be copied or hidden for
-     *                 partial observability.
      * @return new copy fo the Actor
      */
-    public abstract Entity copy(boolean hideInfo);
+    public abstract Entity copy();
 
-    public int getEntityId() {
+    public long getEntityId() {
         return entityId;
     }
 
-    public void setEntityId(int entityId) {
+    public void setEntityId(long entityId) {
         this.entityId = entityId;
     }
 
-    public int getCommanderId() {
-        return commanderId;
+    public int getAgentId() {
+        return agentId;
     }
 
-    public void setCommanderId(int commanderId) {
-        this.commanderId = commanderId;
+    public void setAgentId(int agentId) {
+        this.agentId = agentId;
     }
 
-    public Vector2d getPosition() {
-        return position;
+    public Vector2d getGridPos() {
+        return gridPos;
     }
 
-    public void setPosition(Vector2d position) {
-        this.position = position;
+    public void setGridPos(Vector2d gridPos) {
+        this.gridPos = gridPos;
+    }
+
+    public Vector2d getScreenPos() {
+        return screenPos;
+    }
+
+    public void setScreenPos(Vector2d screenPos) {
+        this.screenPos = screenPos;
     }
 }

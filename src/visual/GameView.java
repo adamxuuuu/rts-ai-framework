@@ -2,7 +2,7 @@ package visual;
 
 import core.game.Game;
 import core.game.GameState;
-import core.level.Grid;
+import core.game.Grid;
 import core.units.Unit;
 import utils.Vector2d;
 
@@ -54,7 +54,6 @@ public class GameView extends JComponent {
 //        g.setColor(Color.BLACK);
 //        g.fillRect(0, 0, dimension.width, dimension.height);
 
-        // Draw Grid
         drawGrid(g);
         drawUnits(g);
 
@@ -76,7 +75,7 @@ public class GameView extends JComponent {
                 } else {
                     g.setColor(new Color(255, value, 255, value));
                 }
-                g.fillRect(j * CELL_SIZE_WIDTH, i * CELL_SIZE_HEIGHT,
+                g.drawRect(j * CELL_SIZE_WIDTH, i * CELL_SIZE_HEIGHT,
                         CELL_SIZE_WIDTH, CELL_SIZE_HEIGHT);
 //                g.setColor(Color.BLACK);
 //                g.drawString(i + ":" + j, j * CELL_SIZE_WIDTH, i * CELL_SIZE_HEIGHT + CELL_SIZE_HEIGHT / 2);
@@ -85,12 +84,12 @@ public class GameView extends JComponent {
     }
 
     private void drawUnits(Graphics2D g) {
-        for (Unit u : gs.getUnits()) {
-            Vector2d p = u.getPosition();
-            Vector2d ps = gridToScreen(p.x, p.y);
+        for (Unit u : gs.getUnits().values()) {
+            Vector2d p = u.getScreenPos();
+            //Vector2d ps = gridToScreen(p.x, p.y);
 
             g.setColor(Color.BLACK);
-            g.fillOval(ps.x, ps.y, CELL_SIZE_WIDTH / 2, CELL_SIZE_HEIGHT / 2);
+            g.fillOval(p.x, p.y, CELL_SIZE_WIDTH / 2, CELL_SIZE_WIDTH / 2);
         }
     }
 

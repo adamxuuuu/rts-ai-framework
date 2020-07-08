@@ -3,6 +3,7 @@ package visual;
 import core.game.Game;
 import core.game.GameState;
 import core.units.Unit;
+import players.Agent;
 import utils.Vector2d;
 import utils.WindowInput;
 
@@ -27,7 +28,9 @@ public class GUI extends JFrame {
     private final Vector2d panTranslate;
     final int scale = 1;
 
-    public GUI(Game game, String title, WindowInput wi, boolean closeAppOnClosingWindow) {
+    private final Agent human;
+
+    public GUI(Game game, String title, WindowInput wi, boolean closeAppOnClosingWindow, Agent human) {
         super(title);
 
         try {
@@ -47,6 +50,7 @@ public class GUI extends JFrame {
 
         this.game = game;
         this.wi = wi;
+        this.human = human;
 
         panTranslate = new Vector2d(0, 0);
         gameView = new GameView(game);
@@ -76,14 +80,17 @@ public class GUI extends JFrame {
             public void mouseClicked(MouseEvent e) {
                 // Left mouse button
                 if (e.getButton() == MouseEvent.BUTTON1) {
-                    Vector2d p = GameView.screenToGrid(e.getX(), e.getY());
+                    Vector2d sp = new Vector2d(e.getX(), e.getY());
+                    Vector2d gp = GameView.screenToGrid(e.getX(), e.getY());
 
-                    gs.addUnit(new Unit("Test", 1, p));
+                    gs.addUnit(new Unit("Test", 1, gp, sp));
                 } else if (e.getButton() == MouseEvent.BUTTON3) {
-                    for (Unit u : gs.getGrid().getAllUnits()) {
-                        //if u.isSeleted()
-                        //u.addAction(Move)
+                    Vector2d dest = new Vector2d(e.getX(), e.getY());
+                    for (Unit u : gs.getUnits().values()) {
+                        gs.getGrid().moveUnit(u, 1, 1);
+//                        u.setAction(new Move(u.getEntityId(), dest));
                     }
+
                 }
             }
 
@@ -126,9 +133,9 @@ public class GUI extends JFrame {
     }
 
     /**
-     * Render objects after update
+     * Call to all components to draw
      *
-     * @param gs to be rendered
+     * @param gs game state
      */
     public void render(GameState gs) {
         this.gs = gs;

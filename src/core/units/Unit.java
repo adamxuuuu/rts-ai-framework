@@ -1,10 +1,6 @@
 package core.units;
 
-import core.commands.Command;
 import utils.Vector2d;
-
-import java.util.LinkedList;
-import java.util.List;
 
 public class Unit extends Entity {
 
@@ -13,30 +9,26 @@ public class Unit extends Entity {
      */
     private final String name;
 
-    /**
-     * Properties of the unit
-     */
     private final float speed;
     private float range;
     private int maxHP;
-    private int cost;
 
-    /**
-     * Statistic of the unit
-     */
     private int kills;
+    private int cost;
     private int veteranLvl;
 
-    private final List<Command> commandList = new LinkedList<>();
 
-    public Unit(String name, float speed, Vector2d pos) {
+    public Unit(String name, float speed, Vector2d gridPos, Vector2d realPos) {
         this.name = name;
         this.speed = speed;
-        this.position = pos;
+        this.gridPos = gridPos;
+        this.screenPos = realPos;
+
+        setEntityId(nextId++);
     }
 
     public Unit(Vector2d pos, String name, float speed, float range, int maxHP, int cost, int kills, int veteranLvl) {
-        this.position = pos;
+        this.gridPos = pos;
         this.name = name;
         this.speed = speed;
         this.range = range;
@@ -44,24 +36,69 @@ public class Unit extends Entity {
         this.cost = cost;
         this.kills = kills;
         this.veteranLvl = veteranLvl;
-    }
 
-    public void update(double elapsed) {
-        for (Command c : commandList) {
-            //c.exec();
-        }
+        setEntityId(nextId++);
     }
 
     @Override
-    public Entity copy(boolean hideInfo) {
-        return null;
+    public Entity copy() {
+        return new Unit(name, speed, gridPos, screenPos);
     }
 
     @Override
     public String toString() {
         return "Unit{" +
                 "name='" + name + '\'' +
-                ", position=" + position +
+                ", position=" + gridPos +
                 '}';
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public float getSpeed() {
+        return speed;
+    }
+
+    public float getRange() {
+        return range;
+    }
+
+    public void setRange(float range) {
+        this.range = range;
+    }
+
+    public int getMaxHP() {
+        return maxHP;
+    }
+
+    public void setMaxHP(int maxHP) {
+        this.maxHP = maxHP;
+    }
+
+    public int getKills() {
+        return kills;
+    }
+
+    public void setKills(int kills) {
+        this.kills = kills;
+    }
+
+    public int getCost() {
+        return cost;
+    }
+
+    public void setCost(int cost) {
+        this.cost = cost;
+    }
+
+    public int getVeteranLvl() {
+        return veteranLvl;
+    }
+
+    public void setVeteranLvl(int veteranLvl) {
+        this.veteranLvl = veteranLvl;
+    }
+
 }

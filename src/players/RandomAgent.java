@@ -1,8 +1,7 @@
 package players;
 
-import core.commands.Command;
+import core.actions.Action;
 import core.game.GameState;
-import utils.ElapsedCpuTimer;
 
 import java.util.Random;
 
@@ -16,7 +15,7 @@ public class RandomAgent extends Agent {
     }
 
     @Override
-    public Command order(GameState gs, ElapsedCpuTimer ect) {
+    public Action act(GameState gs) {
         return null;
     }
 

@@ -1,14 +1,20 @@
 package core.game;
 
-import core.level.Grid;
+import core.actions.Action;
+import core.units.Entity;
 import core.units.Unit;
 
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 import static utils.Constants.DEFAULT_GRID_HEIGHT;
 import static utils.Constants.DEFAULT_GRID_WIDTH;
 
 public class GameState {
+
+    private static final Logger logger = Logger.getLogger(GameState.class.getName());
 
     /**
      * The game grid
@@ -20,8 +26,15 @@ public class GameState {
      */
     private int tick = 0;
 
+    /**
+     * List for storing all actions
+     */
+    private final List<Action> allActions;
+
     GameState() {
         grid = new Grid(DEFAULT_GRID_HEIGHT, DEFAULT_GRID_WIDTH);
+
+        allActions = new LinkedList<>();
     }
 
     public Grid getGrid() {
@@ -55,15 +68,24 @@ public class GameState {
         return copy;
     }
 
-    public Unit getUnit(int unitId) {
-        return null;
+    public Entity getUnit(long unitId) {
+        return grid.getEntity(unitId);
     }
 
     public void addUnit(Unit u) {
         grid.addUnit(u);
     }
 
-    public List<Unit> getUnits() {
-        return grid.getAllUnits();
+    public Map<Long, Unit> getUnits() {
+        return grid.getEntities();
+    }
+
+    /**
+     * Advance current game state by certain amount of time
+     *
+     * @param elapsed time since last update
+     */
+    public void update(double elapsed) {
+
     }
 }
