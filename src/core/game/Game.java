@@ -1,13 +1,16 @@
 package core.game;
 
+import core.actions.Action;
 import players.Agent;
 import players.HumanAgent;
 import utils.FPSCounter;
 import visual.GUI;
 
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 
-import static utils.Constants.TIME_PER_FRAME;
+import static core.Constants.TIME_PER_FRAME;
 
 public class Game {
 
@@ -65,12 +68,25 @@ public class Game {
             // Render as fast as possible (hopefully)
             frame.render(getGameState());
 
-            // Print FPS if 1 second past
             fpsCounter.printResult(System.nanoTime());
         }
     }
 
     private void update(double elapsed) {
+        for (Agent agent : players) {
+//            System.out.println(agent.toString());
+            if (agent instanceof HumanAgent) {
+                Iterator<Map.Entry<Long, Action>> it = ((HumanAgent) agent).getActions().entrySet().iterator();
+                while (it.hasNext()) {
+                    Action next = it.next().getValue();
+                    if (next.isComplete()) {
+                        it.remove();
+                    } else {
+                        next.exec(gs, elapsed);
+                    }
+                }
+            }
+        }
         // game update
         gs.update(elapsed);
         // increment tick
@@ -93,7 +109,7 @@ public class Game {
      */
     private GameState getGameState() {
         //TODO return a copy
-        return gs; // .copy();
+        return gs.copy();
     }
 
     /**
@@ -101,10 +117,10 @@ public class Game {
      *
      * @return the human player
      */
-    public Agent getHuman() {
+    public HumanAgent getHuman() {
         for (Agent ag : players) {
             if (ag instanceof HumanAgent) {
-                return ag;
+                return (HumanAgent) ag;
             }
         }
         return null;

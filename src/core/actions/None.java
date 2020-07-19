@@ -8,12 +8,16 @@ import core.game.GameState;
 public class None implements Action {
 
     @Override
-    public boolean exec(GameState gs) {
-        return false;
+    public void exec(GameState gs, double elapsed) {
     }
 
     @Override
     public Action copy() {
         return new None();
+    }
+
+    @Override
+    public boolean isComplete() {
+        return false;
     }
 }

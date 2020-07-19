@@ -4,7 +4,7 @@ import utils.Vector2d;
 
 public abstract class Entity {
 
-    static long nextId = 0;
+    public static long nextId = 1000;
 
     /**
      * Unique ID of this entity.

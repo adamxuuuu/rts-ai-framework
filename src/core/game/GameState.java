@@ -1,16 +1,12 @@
 package core.game;
 
-import core.actions.Action;
-import core.units.Entity;
 import core.units.Unit;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
-import static utils.Constants.DEFAULT_GRID_HEIGHT;
-import static utils.Constants.DEFAULT_GRID_WIDTH;
+import static core.Constants.DEFAULT_GRID_WIDTH;
 
 public class GameState {
 
@@ -26,15 +22,8 @@ public class GameState {
      */
     private int tick = 0;
 
-    /**
-     * List for storing all actions
-     */
-    private final List<Action> allActions;
-
     GameState() {
-        grid = new Grid(DEFAULT_GRID_HEIGHT, DEFAULT_GRID_WIDTH);
-
-        allActions = new LinkedList<>();
+        grid = new Grid(DEFAULT_GRID_WIDTH);
     }
 
     public Grid getGrid() {
@@ -54,8 +43,7 @@ public class GameState {
     }
 
     /**
-     * Creates a deep copy of this game state, given player index. Sets up the game state so that it contains
-     * only information available to the given player. If -1, state contains all information.
+     * Creates a deep copy of this game state
      *
      * @return a copy of this game state.
      */
@@ -68,8 +56,8 @@ public class GameState {
         return copy;
     }
 
-    public Entity getUnit(long unitId) {
-        return grid.getEntity(unitId);
+    public Unit getUnit(long unitId) {
+        return (Unit) grid.getEntity(unitId);
     }
 
     public void addUnit(Unit u) {
@@ -78,6 +66,10 @@ public class GameState {
 
     public Map<Long, Unit> getUnits() {
         return grid.getEntities();
+    }
+
+    public Set<Map.Entry<Long, Unit>> allUnits() {
+        return getUnits().entrySet();
     }
 
     /**

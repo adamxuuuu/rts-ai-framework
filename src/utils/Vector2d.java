@@ -359,7 +359,10 @@ public class Vector2d {
 
         for (int i = x - radius; i <= x + radius; i++) {
             for (int j = y - radius; j <= y + radius; j++) {
-
+                // 4 way connectivity
+                if (radius == 1 && Math.abs(i - x) + Math.abs(j - y) > 1) {
+                    continue;
+                }
                 //Not x,y and within established bounds
                 if ((i != x || j != y) && (i >= min && j >= min && i < max && j < max)) {
                     vectors.add(new Vector2d(i, j));
@@ -379,6 +382,21 @@ public class Vector2d {
 
     public static double euclideanDistance(Vector2d p1, Vector2d p2) {
         return Math.sqrt(Math.pow(Math.abs(p1.x - p2.x), 2) + Math.pow(Math.abs(p1.y - p2.y), 2));
+    }
+
+    public Vector2d nonZero() {
+        int dx = 0, dy = 0;
+        if (x != 0) {
+            dx = x > 0 ? 1 : -1;
+        }
+        if (y != 0) {
+            dy = y > 0 ? 1 : -1;
+        }
+        return new Vector2d(dx, dy);
+    }
+
+    public Vector2d reverse() {
+        return new Vector2d(y, x);
     }
 
 }

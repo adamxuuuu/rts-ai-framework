@@ -1,9 +1,12 @@
 package visual;
 
+import core.actions.Build;
+import core.actions.Move;
 import core.game.Game;
 import core.game.GameState;
+import core.units.Entity;
 import core.units.Unit;
-import players.Agent;
+import players.HumanAgent;
 import utils.Vector2d;
 import utils.WindowInput;
 
@@ -11,8 +14,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.Map;
+import java.util.Random;
 
-import static utils.Constants.*;
+import static core.Constants.*;
 
 public class GUI extends JFrame {
 
@@ -22,15 +27,20 @@ public class GUI extends JFrame {
 
     // Frames
     private final GameView gameView;
+    private final InfoView infoView;
     private final WindowInput wi;
 
     private final double screenDiagonal;
-    private final Vector2d panTranslate;
+    private final Random rnd = new Random();
     final int scale = 1;
 
-    private final Agent human;
+    // Human controller
+    private final HumanAgent human;
 
-    public GUI(Game game, String title, WindowInput wi, boolean closeAppOnClosingWindow, Agent human) {
+    // Unit bounding box selection
+    private Vector2d startDrag, endDrag;
+
+    public GUI(Game game, String title, WindowInput wi, boolean closeAppOnClosingWindow, HumanAgent human) {
         super(title);
 
         try {
@@ -45,19 +55,33 @@ public class GUI extends JFrame {
 
         // Settings
         GUI_GAME_VIEW_SIZE = (int) (0.46 * screenDiagonal * scale);
-        CELL_SIZE_HEIGHT = GUI_GAME_VIEW_SIZE / game.getGrid().getHeight() * scale;
-        CELL_SIZE_WIDTH = GUI_GAME_VIEW_SIZE / game.getGrid().getWidth() * scale;
+        CELL_SIZE = GUI_GAME_VIEW_SIZE / game.getGrid().getSize() * scale;
+        GUI_SIDE_PANEL_WIDTH = (int) (0.2 * screenDiagonal * scale);
+        GUI_SIDE_PANEL_HEIGHT = (int) (0.4 * screenDiagonal * scale);
 
         this.game = game;
         this.wi = wi;
         this.human = human;
+        this.gameView = new GameView(game);
+        this.infoView = new InfoView();
 
-        panTranslate = new Vector2d(0, 0);
-        gameView = new GameView(game);
+        // Frame layout
+        GridBagLayout gbl = new GridBagLayout();
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.weighty = 0;
+
+        setLayout(gbl);
 
         // Create Panels
         JPanel gamePanel = createGamePanel();
-        getContentPane().add(gamePanel);
+        JPanel sidePanel = createSidePanel();
+
+        gbc.gridx = 0;
+        getContentPane().add(gamePanel, gbc);
+
+        gbc.gridx++;
+        getContentPane().add(sidePanel, gbc);
 
         // Frame properties
         pack();
@@ -78,30 +102,36 @@ public class GUI extends JFrame {
         panel.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                // Left mouse button
+                Vector2d sp = new Vector2d(e.getX(), e.getY());
+                Vector2d gp = GameView.screenToGrid(sp);
                 if (e.getButton() == MouseEvent.BUTTON1) {
-                    Vector2d sp = new Vector2d(e.getX(), e.getY());
-                    Vector2d gp = GameView.screenToGrid(e.getX(), e.getY());
-
-                    gs.addUnit(new Unit("Test", 1, gp, sp));
+                    System.out.println(GameView.gridToScreen(gp));
+                    System.out.println(GameView.screenToGrid(sp));
+                    // Select
                 } else if (e.getButton() == MouseEvent.BUTTON3) {
-                    Vector2d dest = new Vector2d(e.getX(), e.getY());
-                    for (Unit u : gs.getUnits().values()) {
-                        gs.getGrid().moveUnit(u, 1, 1);
-//                        u.setAction(new Move(u.getEntityId(), dest));
+                    // Interact
+                    if (game.getGrid().accessible(gp.x, gp.y)) {
+                        for (Map.Entry<Long, Unit> entry : gs.allUnits()) {
+                            long uId = entry.getKey();
+                            // Add a move action to the human player's action map
+                            human.addAction(uId, new Move(uId, sp, gp));
+                        }
                     }
-
                 }
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
-
+                startDrag = new Vector2d(e.getX(), e.getY());
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
+                endDrag = new Vector2d(e.getX(), e.getY());
 
+                if (startDrag != null && !endDrag.equals(startDrag)) {
+                    //TODO unit selection
+                }
             }
 
             @Override
@@ -121,15 +151,42 @@ public class GUI extends JFrame {
         c.weighty = 0;
 
         c.gridy = 0;
-//        panel.add(Box.createRigidArea(new Dimension(0, GUI_COMP_SPACING / 2)), c);
-
-//        c.gridy++;
         panel.add(gameView, c);
 
-//        c.gridy++;
-//        panel.add(Box.createRigidArea(new Dimension(0, GUI_COMP_SPACING / 2)), c);
-
         return panel;
+    }
+
+    private JPanel createSidePanel() {
+        JPanel sidePanel = new JPanel();
+
+        sidePanel.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.SOUTH;
+        c.weighty = 0;
+
+        c.gridy = 0;
+        JPanel buttons = new JPanel();
+
+        JButton build = new JButton("Build");
+        build.setSize(50, 20);
+        build.addActionListener(e -> {
+            int gx = rnd.nextInt(game.getGrid().getSize()), gy = rnd.nextInt(game.getGrid().getSize());
+            if (game.getGrid().accessible(gx, gy)) {
+                Vector2d gp = new Vector2d(gx, gy);
+                Unit unit = new Unit("Test", rnd.nextInt(5) + 1, gp, GameView.gridToScreen(gp));
+                unit.setEntityId(Entity.nextId++);
+                unit.setAgentId(human.playerID());
+                human.addAction(0, new Build(unit));
+            }
+        });
+
+        buttons.add(build);
+        sidePanel.add(buttons, c);
+
+        c.gridy++;
+        sidePanel.add(infoView, c);
+
+        return sidePanel;
     }
 
     /**

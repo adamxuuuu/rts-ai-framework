@@ -1,26 +1,33 @@
 package core.actions;
 
 import core.game.GameState;
-import core.units.Building;
-import utils.Vector2d;
+import core.units.Entity;
+import core.units.Unit;
 
 public class Build implements Action {
 
-    private final Building building;
-    private final Vector2d gridPos;
+    private final Entity entity;
+    private boolean isComplete;
 
-    public Build(Building building, Vector2d gridPos) {
-        this.building = building;
-        this.gridPos = gridPos;
+    public Build(Entity entity) {
+        this.entity = entity;
     }
 
     @Override
-    public boolean exec(GameState gs) {
-        return false;
+    public void exec(GameState gs, double elapsed) {
+        if (entity instanceof Unit) {
+            gs.addUnit((Unit) entity);
+        }
+        isComplete = true;
     }
 
     @Override
     public Action copy() {
         return null;
+    }
+
+    @Override
+    public boolean isComplete() {
+        return isComplete;
     }
 }

@@ -1,8 +1,10 @@
 package core.game;
 
+import core.Constants;
 import core.units.Entity;
 import core.units.Unit;
 import utils.Vector2d;
+import visual.GameView;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,23 +12,28 @@ import java.util.Random;
 
 public class Grid {
 
-    // Dimension
-    private int height, width;
+    /**
+     * Size of the grid map
+     */
+    private int size;
 
-    // Height map
+    /**
+     * Stores the height value for each cell in the grid
+     */
     private float[][] heightMap;
 
-    // Units
+    /**
+     * All entities on the grid
+     */
     private final Map<Long, Unit> entities = new HashMap<>();
 
     public Grid() {
     }
 
-    public Grid(int height, int width) {
-        this.height = height;
-        this.width = width;
+    public Grid(int size) {
+        this.size = size;
 
-        heightMap = new float[height][width];
+        heightMap = new float[size][size];
         randomMap();
     }
 
@@ -36,11 +43,11 @@ public class Grid {
      * @param addUnit unit
      */
     public void addUnit(Unit addUnit) {
-//        for (Unit unit : entities.values()) {
-//            if (unit.getGridPos().equals(addUnit.getGridPos())) {
-//                return;
-//            }
-//        }
+        for (Unit unit : entities.values()) {
+            if (unit.getScreenPos().equals(addUnit.getScreenPos())) {
+                return;
+            }
+        }
         entities.put(addUnit.getEntityId(), addUnit);
     }
 
@@ -55,12 +62,11 @@ public class Grid {
 
     public Grid copy() {
         Grid copyGrid = new Grid();
-        copyGrid.height = this.height;
-        copyGrid.width = this.width;
-        copyGrid.heightMap = new float[height][width];
+        copyGrid.size = this.size;
+        copyGrid.heightMap = new float[size][size];
 
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
                 copyGrid.heightMap[i][j] = this.heightMap[i][j];
             }
         }
@@ -77,8 +83,8 @@ public class Grid {
      * Randomly generating height between 0.0 - 0.1
      */
     private void randomMap() {
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
                 heightMap[i][j] = new Random().nextFloat();
             }
         }
@@ -86,6 +92,10 @@ public class Grid {
 
     public Map<Long, Unit> getEntities() {
         return entities;
+    }
+
+    public float[][] getHeightMap() {
+        return heightMap;
     }
 
     /**
@@ -98,27 +108,28 @@ public class Grid {
         return entities.get(eId);
     }
 
-    public int getHeight() {
-        return height;
-    }
-
-    public int getWidth() {
-        return width;
+    public int getSize() {
+        return size;
     }
 
     public float getHeightAt(int x, int y) {
         return heightMap[x][y];
     }
 
+    public boolean accessible(int x, int y) {
+        float h = getHeightAt(x, y);
+        return h >= Constants.SEA_LVL &&
+                h <= Constants.GRD_LVL;
+    }
+
     /**
-     * Move a unit in x/y direction
+     * Move a unit to a grid position (centre)
      *
      * @param u  {@link Unit} to move
-     * @param dx movement in x
-     * @param dy movement in y
+     * @param dt movement along x and y direction
      */
-    public void moveUnit(Unit u, int dx, int dy) {
-        Vector2d p = u.getScreenPos();
-        u.setScreenPos(new Vector2d(p.x + dx, p.y + dy));
+    public void moveUnit(Unit u, Vector2d dt) {
+        u.setScreenPos(u.getScreenPos().add(dt));
+        u.setGridPos(GameView.screenToGrid(u.getScreenPos()));
     }
 }

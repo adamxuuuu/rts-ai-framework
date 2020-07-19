@@ -9,7 +9,7 @@ import utils.Vector2d;
 import javax.swing.*;
 import java.awt.*;
 
-import static utils.Constants.*;
+import static core.Constants.*;
 
 public class GameView extends JComponent {
 
@@ -63,47 +63,47 @@ public class GameView extends JComponent {
         if (grid == null) {
             return;
         }
-        for (int i = 0; i < grid.getHeight(); i++) {
-            for (int j = 0; j < grid.getWidth(); j++) {
-                float factor = grid.getHeightAt(i, j);
-                int value = (int) (255 * factor);
+        for (int i = 0; i < grid.getSize(); i++) {
+            for (int j = 0; j < grid.getSize(); j++) {
+//                g.setColor(Color.BLACK);
+//                g.drawString(i + ":" + j, j * CELL_SIZE, i * CELL_SIZE + CELL_SIZE / 2);
+                float h = grid.getHeightAt(i, j);
+                int value = (int) (255 * h);
                 // Terrain level: Sea, Ground, Mountain
-                if (factor < 0.1) {
-                    g.setColor(new Color(value, 255, 255, value));
-                } else if (factor < 0.6) {
+                if (h < SEA_LVL) {
+                    g.setColor(new Color(value, 255, 255));
+                    g.fillRect(j * CELL_SIZE, i * CELL_SIZE,
+                            CELL_SIZE, CELL_SIZE);
+                } else if (h < GRD_LVL) {
                     g.setColor(new Color(255, 255, value, value));
                 } else {
-                    g.setColor(new Color(255, value, 255, value));
+                    g.setColor(new Color(0, 0, 0));
+                    g.fillRect(j * CELL_SIZE, i * CELL_SIZE,
+                            CELL_SIZE, CELL_SIZE);
                 }
-                g.drawRect(j * CELL_SIZE_WIDTH, i * CELL_SIZE_HEIGHT,
-                        CELL_SIZE_WIDTH, CELL_SIZE_HEIGHT);
-//                g.setColor(Color.BLACK);
-//                g.drawString(i + ":" + j, j * CELL_SIZE_WIDTH, i * CELL_SIZE_HEIGHT + CELL_SIZE_HEIGHT / 2);
+                g.drawRect(j * CELL_SIZE, i * CELL_SIZE,
+                        CELL_SIZE, CELL_SIZE);
             }
         }
     }
 
     private void drawUnits(Graphics2D g) {
         for (Unit u : gs.getUnits().values()) {
-            Vector2d p = u.getScreenPos();
-            //Vector2d ps = gridToScreen(p.x, p.y);
-
-            g.setColor(Color.BLACK);
-            g.fillOval(p.x, p.y, CELL_SIZE_WIDTH / 2, CELL_SIZE_WIDTH / 2);
+            Vector2d sp = u.getScreenPos();
+            g.setColor(Color.BLUE);
+            g.fillOval(sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
         }
     }
 
     /**
      * Convert {@link Grid} position to screen position
      *
-     * @param x row
-     * @param y column
-     * @return Screen position
+     * @param girdPos@return Screen position
      */
-    public static Vector2d gridToScreen(double x, double y) {
+    public static Vector2d gridToScreen(Vector2d girdPos) {
 
-        double y2 = (int) x * CELL_SIZE_HEIGHT;
-        double x2 = (int) y * CELL_SIZE_WIDTH;
+        double x2 = girdPos.y * CELL_SIZE + CELL_SIZE / 2.0;
+        double y2 = girdPos.x * CELL_SIZE + CELL_SIZE / 2.0;
 
         return new Vector2d((int) x2, (int) y2);
     }
@@ -111,18 +111,13 @@ public class GameView extends JComponent {
     /**
      * Convert screen position to {@link Grid} position
      *
-     * @param x height
-     * @param y width
-     * @return Grid position {@link Vector2d}
+     * @param screenPos@return Grid position {@link Vector2d}
      */
-    public static Vector2d screenToGrid(double x, double y) {
-        int w = GameView.dimension.width;
-        int h = GameView.dimension.height;
-        double y2 = x / w * w / CELL_SIZE_WIDTH;
-        double x2 = y / h * h / CELL_SIZE_HEIGHT;
-
-        //TODO debug
-//        System.out.println((int) x2 + ":" + (int) y2);
+    public static Vector2d screenToGrid(Vector2d screenPos) {
+        double w = GameView.dimension.width;
+        double h = GameView.dimension.height;
+        double x2 = screenPos.y / h * h / CELL_SIZE;
+        double y2 = screenPos.x / w * w / CELL_SIZE;
 
         return new Vector2d((int) x2, (int) y2);
     }

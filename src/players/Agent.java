@@ -30,5 +30,7 @@ public abstract class Agent {
 
     public abstract Agent copy();
 
-
+    public String toString() {
+        return this.getClass().getName();
+    }
 }

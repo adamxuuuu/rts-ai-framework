@@ -30,8 +30,12 @@ public class Start {
      */
     private static Agent getAgent(PlayerType playerType) {
         switch (playerType) {
-            case HUMAN -> new HumanAgent();
-            case RANDOM -> new RandomAgent(System.currentTimeMillis());
+            case HUMAN -> {
+                return new HumanAgent();
+            }
+            case RANDOM -> {
+                return new RandomAgent(System.currentTimeMillis());
+            }
         }
         return null;
     }

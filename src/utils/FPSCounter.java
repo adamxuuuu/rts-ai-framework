@@ -1,10 +1,10 @@
 package utils;
 
-import static utils.Constants.SECOND_LONG;
+import static core.Constants.SECOND_LONG;
 
 public class FPSCounter {
 
-    private int frameCounter = 0;
+    private double frameCounter = 0.0;
     private long previous = 0L;
 
     public FPSCounter() {
@@ -15,9 +15,9 @@ public class FPSCounter {
     }
 
     public void printResult(long current) {
-        if (current > previous + SECOND_LONG) {
+        if (current > previous + SECOND_LONG * 10) {
             previous = System.nanoTime();
-            System.out.println("FPS: " + frameCounter);
+            System.out.println("FPS: " + frameCounter / 10);
             frameCounter = 0;
         }
     }

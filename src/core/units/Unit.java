@@ -9,7 +9,7 @@ public class Unit extends Entity {
      */
     private final String name;
 
-    private final float speed;
+    private final int speed;
     private float range;
     private int maxHP;
 
@@ -17,32 +17,18 @@ public class Unit extends Entity {
     private int cost;
     private int veteranLvl;
 
-
-    public Unit(String name, float speed, Vector2d gridPos, Vector2d realPos) {
+    public Unit(String name, int speed, Vector2d gridPos, Vector2d screenPos) {
         this.name = name;
         this.speed = speed;
         this.gridPos = gridPos;
-        this.screenPos = realPos;
-
-        setEntityId(nextId++);
-    }
-
-    public Unit(Vector2d pos, String name, float speed, float range, int maxHP, int cost, int kills, int veteranLvl) {
-        this.gridPos = pos;
-        this.name = name;
-        this.speed = speed;
-        this.range = range;
-        this.maxHP = maxHP;
-        this.cost = cost;
-        this.kills = kills;
-        this.veteranLvl = veteranLvl;
-
-        setEntityId(nextId++);
+        this.screenPos = screenPos;
     }
 
     @Override
     public Entity copy() {
-        return new Unit(name, speed, gridPos, screenPos);
+        Unit copy = new Unit(name, speed, gridPos, screenPos);
+        copy.setEntityId(getEntityId());
+        return copy;
     }
 
     @Override
@@ -57,7 +43,7 @@ public class Unit extends Entity {
         return name;
     }
 
-    public float getSpeed() {
+    public int getSpeed() {
         return speed;
     }
 

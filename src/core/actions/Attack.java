@@ -14,12 +14,16 @@ public class Attack implements Action {
     }
 
     @Override
-    public boolean exec(GameState gs) {
-        return false;
+    public void exec(GameState gs, double elapsed) {
     }
 
     @Override
     public Action copy() {
         return null;
+    }
+
+    @Override
+    public boolean isComplete() {
+        return false;
     }
 }
