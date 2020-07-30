@@ -1,4 +1,4 @@
-package core.units;
+package core.entities;
 
 import utils.Vector2d;
 
@@ -27,6 +27,11 @@ public abstract class Entity {
     protected Vector2d screenPos;
 
     /**
+     * Time (second) for this entity to be built
+     */
+    protected long buildTime;
+
+    /**
      * Method to provide a copy of this actor.
      *
      * @return new copy fo the Actor
@@ -36,7 +41,6 @@ public abstract class Entity {
     public long getEntityId() {
         return entityId;
     }
-
     public void setEntityId(long entityId) {
         this.entityId = entityId;
     }
@@ -44,7 +48,6 @@ public abstract class Entity {
     public int getAgentId() {
         return agentId;
     }
-
     public void setAgentId(int agentId) {
         this.agentId = agentId;
     }
@@ -63,5 +66,9 @@ public abstract class Entity {
 
     public void setScreenPos(Vector2d screenPos) {
         this.screenPos = screenPos;
+    }
+
+    public long getBuildTime() {
+        return buildTime;
     }
 }

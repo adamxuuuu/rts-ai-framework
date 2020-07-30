@@ -27,7 +27,7 @@ public class ElapsedCpuTimer {
         return newCpuTimer;
     }
 
-    public long elapsed() {
+    private long elapsed() {
         return getTime() - oldTime;
     }
 

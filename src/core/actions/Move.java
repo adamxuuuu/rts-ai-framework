@@ -1,10 +1,10 @@
 package core.actions;
 
+import core.entities.Unit;
+import core.entities.pathfinding.Pathfinder;
+import core.entities.pathfinding.PfNode;
 import core.game.GameState;
 import core.game.Grid;
-import core.units.Unit;
-import core.units.pathfinding.Pathfinder;
-import core.units.pathfinding.PfNode;
 import utils.Vector2d;
 import visual.GameView;
 
@@ -35,11 +35,11 @@ public class Move implements Action {
             isComplete = true;
             return;
         }
-        Vector2d gp = unit.getGridPos(); // Unit grid position
+        Vector2d gp = unit.getGridPos();
 
         Pathfinder pf = new Pathfinder(gp);
 
-        // Way points
+        // Calculate Way points/path
         Deque<PfNode> path = pf.pathTo(gridDest, grid);
 
         if (path != null && !path.isEmpty() && wayPoint == null) {
@@ -53,13 +53,13 @@ public class Move implements Action {
         Vector2d wp = wayPoint.getPosition();
 
         Vector2d diff = GameView.gridToScreen(wp).subtract(unit.getScreenPos());
-//        Vector2d dt = wayPoint.getPosition().subtract(unit.getGridPos());
-//        float deltaTime = (float) (elapsed / Constants.SECOND_LONG);
-        Vector2d dt = diff.nonZero().mul(unit.getSpeed());
-        dt = new Vector2d(absMin(diff.x, dt.x), absMin(diff.y, dt.y));
+        Vector2d dv = diff.unify().mul(unit.getSpeed());
+        dv = new Vector2d(absMin(diff.x, dv.x), absMin(diff.y, dv.y));
 
-        grid.moveUnit(unit, dt);
+        // Move
+        grid.updateGridPos(unit, unit.getScreenPos().add(dv));
 
+        // Check if reached waypoint or destination
         Vector2d sp = unit.getScreenPos();
         if (sp.equals(GameView.gridToScreen(wp))) {
             wayPoint = null;

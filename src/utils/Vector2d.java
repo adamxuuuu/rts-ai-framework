@@ -349,18 +349,19 @@ public class Vector2d {
      * Returns a list a neighbouring vectors from target for a given radius. This vector's x,y is
      * excluded from the neighbours.
      *
-     * @param radius the size of the neighborhood (radius = 1, gives a 3x3 neighborhood ).
-     * @param min    the minimum value to keep it in bounds (inclusive).
-     * @param max    the maximum value to keep it in bounds (exclusive).
+     * @param radius   the size of the neighborhood (radius = 1, gives a 3x3 neighborhood ).
+     * @param min      the minimum value to keep it in bounds (inclusive).
+     * @param max      the maximum value to keep it in bounds (exclusive).
+     * @param diagonal 8-way connectivity
      * @return A list of neighbors.
      */
-    public LinkedList<Vector2d> neighborhood(int radius, int min, int max) {
+    public LinkedList<Vector2d> neighborhood(int radius, int min, int max, boolean diagonal) {
         LinkedList<Vector2d> vectors = new LinkedList<>();
 
         for (int i = x - radius; i <= x + radius; i++) {
             for (int j = y - radius; j <= y + radius; j++) {
                 // 4 way connectivity
-                if (radius == 1 && Math.abs(i - x) + Math.abs(j - y) > 1) {
+                if (!diagonal && Math.abs(i - x) + Math.abs(j - y) > 1) {
                     continue;
                 }
                 //Not x,y and within established bounds
@@ -384,7 +385,7 @@ public class Vector2d {
         return Math.sqrt(Math.pow(Math.abs(p1.x - p2.x), 2) + Math.pow(Math.abs(p1.y - p2.y), 2));
     }
 
-    public Vector2d nonZero() {
+    public Vector2d unify() {
         int dx = 0, dy = 0;
         if (x != 0) {
             dx = x > 0 ? 1 : -1;
@@ -395,8 +396,12 @@ public class Vector2d {
         return new Vector2d(dx, dy);
     }
 
-    public Vector2d reverse() {
-        return new Vector2d(y, x);
+    public boolean greater(Vector2d other) {
+        return this.x >= other.x && this.y >= other.y;
+    }
+
+    public boolean less(Vector2d other) {
+        return this.x <= other.x && this.y <= other.y;
     }
 
 }

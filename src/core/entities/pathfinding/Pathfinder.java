@@ -1,6 +1,5 @@
-package core.units.pathfinding;
+package core.entities.pathfinding;
 
-import core.Constants;
 import core.game.Grid;
 import utils.Vector2d;
 
@@ -52,10 +51,9 @@ public class Pathfinder {
                 return calculatePath(n);
 
             ArrayList<PfNode> neighbours = new ArrayList<>();
-            for (Vector2d neigh : n.getPosition().neighborhood(1, 0, grid.getSize())) {
-                float h = grid.getHeightAt(neigh.x, neigh.y);
-                if (h > Constants.GRD_LVL || h < Constants.SEA_LVL) {
-                    // Only add accessible tile
+            for (Vector2d neigh : n.getPosition().neighborhood(1, 0, grid.getSize(), false)) {
+                if (!grid.accessible(neigh.x, neigh.y)) {
+                    // skip tile that can not access or has entity
                     continue;
                 }
                 neighbours.add(new PfNode(neigh));

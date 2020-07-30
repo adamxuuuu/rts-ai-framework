@@ -1,0 +1,10 @@
+{
+  "heavy": {
+    "name": "heavy",
+    "speed": 1,
+    "range": 40,
+    "cost": 300,
+    "maxHp": 300,
+    "buildTime": 3
+  }
+}

@@ -1,9 +1,10 @@
 package visual;
 
+import core.entities.Building;
+import core.entities.Unit;
 import core.game.Game;
 import core.game.GameState;
 import core.game.Grid;
-import core.units.Unit;
 import utils.Vector2d;
 
 import javax.swing.*;
@@ -15,6 +16,7 @@ public class GameView extends JComponent {
 
     // Game
     private final Game game;
+    private final int size;
     private GameState gs;
     private Grid grid;
 
@@ -24,6 +26,7 @@ public class GameView extends JComponent {
     GameView(Game game) {
         this.game = game;
         this.grid = game.getGrid().copy();
+        this.size = grid.getSize();
 
         dimension = new Dimension(GUI_GAME_VIEW_SIZE, GUI_GAME_VIEW_SIZE);
     }
@@ -40,6 +43,8 @@ public class GameView extends JComponent {
     public void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
         paint(g2d);
+
+        Toolkit.getDefaultToolkit().sync();
     }
 
     private void paint(Graphics2D g) {
@@ -50,36 +55,31 @@ public class GameView extends JComponent {
         // For a better graphics, enable this: (be aware this could bring performance issues depending on your HW & OS).
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Draw background
-//        g.setColor(Color.BLACK);
-//        g.fillRect(0, 0, dimension.width, dimension.height);
-
         drawGrid(g);
-        drawUnits(g);
-
+        drawEntities(g);
     }
 
     private void drawGrid(Graphics2D g) {
         if (grid == null) {
             return;
         }
-        for (int i = 0; i < grid.getSize(); i++) {
-            for (int j = 0; j < grid.getSize(); j++) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
 //                g.setColor(Color.BLACK);
 //                g.drawString(i + ":" + j, j * CELL_SIZE, i * CELL_SIZE + CELL_SIZE / 2);
-                float h = grid.getHeightAt(i, j);
-                int value = (int) (255 * h);
-                // Terrain level: Sea, Ground, Mountain
-                if (h < SEA_LVL) {
-                    g.setColor(new Color(value, 255, 255));
-                    g.fillRect(j * CELL_SIZE, i * CELL_SIZE,
-                            CELL_SIZE, CELL_SIZE);
-                } else if (h < GRD_LVL) {
-                    g.setColor(new Color(255, 255, value, value));
-                } else {
-                    g.setColor(new Color(0, 0, 0));
-                    g.fillRect(j * CELL_SIZE, i * CELL_SIZE,
-                            CELL_SIZE, CELL_SIZE);
+                Grid.TerrainType tt = grid.getTerrainAt(i, j);
+                switch (tt) {
+                    case WATER -> {
+                        g.setColor(Color.CYAN);
+                        g.fillRect(j * CELL_SIZE, i * CELL_SIZE,
+                                CELL_SIZE, CELL_SIZE);
+                    }
+                    case LAND -> g.setColor(Color.WHITE);
+                    case MOUNTAIN -> {
+                        g.setColor(Color.DARK_GRAY);
+                        g.fillRect(j * CELL_SIZE, i * CELL_SIZE,
+                                CELL_SIZE, CELL_SIZE);
+                    }
                 }
                 g.drawRect(j * CELL_SIZE, i * CELL_SIZE,
                         CELL_SIZE, CELL_SIZE);
@@ -87,12 +87,31 @@ public class GameView extends JComponent {
         }
     }
 
-    private void drawUnits(Graphics2D g) {
-        for (Unit u : gs.getUnits().values()) {
-            Vector2d sp = u.getScreenPos();
-            g.setColor(Color.BLUE);
-            g.fillOval(sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+    private void drawEntities(Graphics2D g) {
+        // buildings
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                Building b = grid.getBuildingAt(i, j);
+                if (b != null) {
+                    Vector2d gp = b.getGridPos();
+                    g.setColor(PLAYER_COLOR[b.getAgentId()]);
+                    g.drawRect(gp.x * CELL_SIZE, gp.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
+            }
         }
+
+        // units
+        for (Unit u : gs.allUnits()) {
+            Vector2d sp = u.getScreenPos();
+            g.setColor(PLAYER_COLOR[u.getAgentId()]);
+            g.fillOval(sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+            if (GUI.selected.contains(u.getEntityId())) {
+                g.setColor(Color.BLACK);
+                g.drawOval(sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+            }
+
+        }
+
     }
 
     /**

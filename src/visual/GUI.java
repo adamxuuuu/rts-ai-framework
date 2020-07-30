@@ -2,10 +2,11 @@ package visual;
 
 import core.actions.Build;
 import core.actions.Move;
+import core.entities.Entity;
+import core.entities.Unit;
 import core.game.Game;
 import core.game.GameState;
-import core.units.Entity;
-import core.units.Unit;
+import core.game.Grid;
 import players.HumanAgent;
 import utils.Vector2d;
 import utils.WindowInput;
@@ -14,7 +15,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.Random;
 
 import static core.Constants.*;
@@ -24,6 +25,7 @@ public class GUI extends JFrame {
     // Game
     private final Game game;
     private GameState gs;
+    private Grid grid;
 
     // Frames
     private final GameView gameView;
@@ -39,6 +41,7 @@ public class GUI extends JFrame {
 
     // Unit bounding box selection
     private Vector2d startDrag, endDrag;
+    static ArrayList<Long> selected = new ArrayList<>();
 
     public GUI(Game game, String title, WindowInput wi, boolean closeAppOnClosingWindow, HumanAgent human) {
         super(title);
@@ -105,18 +108,22 @@ public class GUI extends JFrame {
                 Vector2d sp = new Vector2d(e.getX(), e.getY());
                 Vector2d gp = GameView.screenToGrid(sp);
                 if (e.getButton() == MouseEvent.BUTTON1) {
-                    System.out.println(GameView.gridToScreen(gp));
-                    System.out.println(GameView.screenToGrid(sp));
+                    selected.clear();
+                    Long selectedId = grid.selectUnitId(sp);
+                    if (selectedId != null) {
+                        selected.add(selectedId);
+                    }
                     // Select
                 } else if (e.getButton() == MouseEvent.BUTTON3) {
                     // Interact
-                    if (game.getGrid().accessible(gp.x, gp.y)) {
-                        for (Map.Entry<Long, Unit> entry : gs.allUnits()) {
-                            long uId = entry.getKey();
-                            // Add a move action to the human player's action map
-                            human.addAction(uId, new Move(uId, sp, gp));
-                        }
+                    if (!grid.accessible(gp.x, gp.y)) {
+                        return;
                     }
+                    for (long id : selected) {
+                        // Add a move action to the human player's action map
+                        human.addUnitAct(id, new Move(id, sp, gp));
+                    }
+
                 }
             }
 
@@ -127,10 +134,12 @@ public class GUI extends JFrame {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                endDrag = new Vector2d(e.getX(), e.getY());
-
-                if (startDrag != null && !endDrag.equals(startDrag)) {
-                    //TODO unit selection
+                if (e.getButton() == MouseEvent.BUTTON1) {
+                    selected.clear();
+                    endDrag = new Vector2d(e.getX(), e.getY());
+                    if (startDrag != null && !endDrag.equals(startDrag)) {
+                        selected.addAll(grid.selectUnitIds(startDrag, endDrag));
+                    }
                 }
             }
 
@@ -168,16 +177,9 @@ public class GUI extends JFrame {
         JPanel buttons = new JPanel();
 
         JButton build = new JButton("Build");
-        build.setSize(50, 20);
         build.addActionListener(e -> {
-            int gx = rnd.nextInt(game.getGrid().getSize()), gy = rnd.nextInt(game.getGrid().getSize());
-            if (game.getGrid().accessible(gx, gy)) {
-                Vector2d gp = new Vector2d(gx, gy);
-                Unit unit = new Unit("Test", rnd.nextInt(5) + 1, gp, GameView.gridToScreen(gp));
-                unit.setEntityId(Entity.nextId++);
-                unit.setAgentId(human.playerID());
-                human.addAction(0, new Build(unit));
-            }
+            Unit unit = new Unit("./resources/unit/light.json", Entity.nextId++, human.playerID());
+            human.addBuildAct(new Build(unit));
         });
 
         buttons.add(build);
@@ -196,6 +198,7 @@ public class GUI extends JFrame {
      */
     public void render(GameState gs) {
         this.gs = gs;
+        this.grid = gs.getGrid();
         gameView.render(gs);
 
         repaint();

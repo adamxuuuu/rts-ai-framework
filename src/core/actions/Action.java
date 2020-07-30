@@ -8,7 +8,7 @@ public interface Action {
      * Execute this command under game state X
      *
      * @param gs      the game state which the command is executed
-     * @param elapsed time since last game update
+     * @param elapsed
      */
     void exec(GameState gs, double elapsed);
 

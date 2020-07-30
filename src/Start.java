@@ -23,9 +23,7 @@ public class Start {
     }
 
     /**
-     * Create players given type
-     *
-     * @param playerType
+     * @param playerType call agent constructor based on type
      * @return the player corresponding to type
      */
     private static Agent getAgent(PlayerType playerType) {
@@ -40,6 +38,12 @@ public class Start {
         return null;
     }
 
+    /**
+     * Create agent instances based on given player types
+     *
+     * @param playerTypes types of agents
+     * @return array of agents
+     */
     private static Agent[] getPlayers(PlayerType[] playerTypes) {
         Agent[] players = new Agent[playerTypes.length];
 
@@ -67,17 +71,15 @@ public class Start {
     }
 
     private static void runGame(Game g) {
-
         WindowInput wi = new WindowInput();
         wi.windowClosed = false;
-        GUI frame = new GUI(g, "genRTS", wi, true, g.getHuman());
+        GUI frame = new GUI(g, "genRTS", wi, true, g.humanPlayer());
         frame.addWindowListener(wi);
 
         g.run(frame);
     }
 
     public static void main(String[] args) {
-
         Game g = init(new PlayerType[]{PlayerType.HUMAN, PlayerType.RANDOM});
         runGame(g);
     }

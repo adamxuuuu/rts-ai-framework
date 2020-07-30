@@ -1,7 +1,7 @@
 package core.actions;
 
+import core.entities.Entity;
 import core.game.GameState;
-import core.units.Entity;
 
 public class Attack implements Action {
 
