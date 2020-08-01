@@ -1,0 +1,7 @@
+{
+  "type": 0,
+  "name": "base",
+  "cost": 800,
+  "maxHp": 500,
+  "buildTime": 20
+}

@@ -1,9 +1,11 @@
-package core.entities;
+package core.gameObject;
 
-import utils.Vector2d;
+import org.json.simple.JSONObject;
+import util.Vector2d;
 
 public abstract class Entity {
 
+    // Unique identifier of each entity
     public static long nextId = 1000;
 
     /**
@@ -26,10 +28,23 @@ public abstract class Entity {
      */
     protected Vector2d screenPos;
 
-    /**
-     * Time (second) for this entity to be built
-     */
-    protected long buildTime;
+    protected String name; // Name of the unit
+    protected int cost; // Resource needed to build
+    protected long buildTime; // Time (second) for this entity to be built
+    protected int maxHP; // Max hit point
+    protected int currentHP; // Current hip point
+
+    public void takeDamage(int amount) {
+        currentHP -= amount;
+    }
+
+    protected void loadBaseProperties(JSONObject jo) {
+        this.name = (String) jo.get("name");
+        this.cost = Math.toIntExact((Long) jo.get("cost"));
+        this.maxHP = Math.toIntExact((Long) jo.get("maxHp"));
+        this.buildTime = Math.toIntExact((Long) jo.get("buildTime"));
+        currentHP = maxHP;
+    }
 
     /**
      * Method to provide a copy of this actor.
@@ -38,9 +53,12 @@ public abstract class Entity {
      */
     public abstract Entity copy();
 
+    //----------------------------Getter&Setter----------------------------//
+
     public long getEntityId() {
         return entityId;
     }
+
     public void setEntityId(long entityId) {
         this.entityId = entityId;
     }
@@ -55,7 +73,6 @@ public abstract class Entity {
     public Vector2d getGridPos() {
         return gridPos;
     }
-
     public void setGridPos(Vector2d gridPos) {
         this.gridPos = gridPos;
     }
@@ -71,4 +88,13 @@ public abstract class Entity {
     public long getBuildTime() {
         return buildTime;
     }
+
+    public int getCurrentHP() {
+        return currentHP;
+    }
+
+    public int getCost() {
+        return cost;
+    }
+
 }

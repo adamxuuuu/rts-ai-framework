@@ -1,11 +1,11 @@
-package core.actions;
+package core.action;
 
 import core.game.GameState;
 
 /**
  * Do nothing action
  */
-public class None implements Action {
+public class None extends Action {
 
     @Override
     public void exec(GameState gs, double elapsed) {

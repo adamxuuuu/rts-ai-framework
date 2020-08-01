@@ -1,6 +1,6 @@
-package players;
+package player;
 
-import core.actions.Action;
+import core.action.Action;
 import core.game.GameState;
 
 public abstract class Agent {

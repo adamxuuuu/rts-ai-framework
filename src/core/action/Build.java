@@ -1,14 +1,14 @@
-package core.actions;
+package core.action;
 
 import core.Constants;
-import core.entities.Entity;
-import core.entities.Unit;
 import core.game.GameState;
+import core.gameObject.Building;
+import core.gameObject.Entity;
+import core.gameObject.Unit;
 
-public class Build implements Action {
+public class Build extends Action {
 
     private final Entity entity;
-    private boolean isComplete;
     private long buildTime;
 
     public Build(Entity entity) {
@@ -18,7 +18,7 @@ public class Build implements Action {
 
     @Override
     public void exec(GameState gs, double elapsed) {
-        buildTime -= Constants.TIME_PER_FRAME;
+        buildTime -= elapsed;
         if (buildTime > 0) {
 //            System.out.println("building...");
             return;
@@ -26,6 +26,8 @@ public class Build implements Action {
 
         if (entity instanceof Unit) {
             gs.addUnit((Unit) entity, true);
+        } else if (entity instanceof Building) {
+            gs.addBuilding((Building) entity);
         }
         isComplete = true;
     }
@@ -33,10 +35,5 @@ public class Build implements Action {
     @Override
     public Action copy() {
         return null;
-    }
-
-    @Override
-    public boolean isComplete() {
-        return isComplete;
     }
 }

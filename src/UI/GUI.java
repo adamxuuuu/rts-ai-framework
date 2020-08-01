@@ -1,20 +1,22 @@
-package visual;
+package UI;
 
-import core.actions.Build;
-import core.actions.Move;
-import core.entities.Entity;
-import core.entities.Unit;
+import core.action.Attack;
+import core.action.Build;
+import core.action.Move;
 import core.game.Game;
 import core.game.GameState;
 import core.game.Grid;
-import players.HumanAgent;
-import utils.Vector2d;
-import utils.WindowInput;
+import core.gameObject.Entity;
+import core.gameObject.Unit;
+import player.HumanAgent;
+import util.Vector2d;
+import util.WindowInput;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -58,7 +60,7 @@ public class GUI extends JFrame {
 
         // Settings
         GUI_GAME_VIEW_SIZE = (int) (0.46 * screenDiagonal * scale);
-        CELL_SIZE = GUI_GAME_VIEW_SIZE / game.getGrid().getSize() * scale;
+        CELL_SIZE = GUI_GAME_VIEW_SIZE / game.getGrid().size() * scale;
         GUI_SIDE_PANEL_WIDTH = (int) (0.2 * screenDiagonal * scale);
         GUI_SIDE_PANEL_HEIGHT = (int) (0.4 * screenDiagonal * scale);
 
@@ -116,14 +118,22 @@ public class GUI extends JFrame {
                     // Select
                 } else if (e.getButton() == MouseEvent.BUTTON3) {
                     // Interact
-                    if (!grid.accessible(gp.x, gp.y)) {
+                    if (!isValidPos(gp.x, gp.y) || !grid.accessible(gp.x, gp.y)) {
                         return;
                     }
-                    for (long id : selected) {
-                        // Add a move action to the human player's action map
-                        human.addUnitAct(id, new Move(id, sp, gp));
-                    }
 
+                    Entity enemy = grid.getEnemyAt(human.playerID(), gp);
+
+                    if (enemy == null) {
+                        for (long uId : selected) {
+                            // Add a move action to the human player's action map
+                            human.addUnitAct(uId, new Move(uId, gp));
+                        }
+                    } else {
+                        for (Long uId : selected) {
+                            human.addUnitAct(uId, new Attack(uId, enemy.getEntityId()));
+                        }
+                    }
                 }
             }
 
@@ -172,21 +182,32 @@ public class GUI extends JFrame {
         GridBagConstraints c = new GridBagConstraints();
         c.anchor = GridBagConstraints.SOUTH;
         c.weighty = 0;
-
         c.gridy = 0;
-        JPanel buttons = new JPanel();
+        c.gridx = 0;
 
-        JButton build = new JButton("Build");
-        build.addActionListener(e -> {
-            Unit unit = new Unit("./resources/unit/light.json", Entity.nextId++, human.playerID());
-            human.addBuildAct(new Build(unit));
-        });
 
-        buttons.add(build);
-        sidePanel.add(buttons, c);
+        File folder = new File("./resources/unit");
+        File[] listOfFiles = folder.listFiles();
 
-        c.gridy++;
-        sidePanel.add(infoView, c);
+        JPanel unitButtons = new JPanel();
+        for (File file : listOfFiles != null ? listOfFiles : new File[0]) {
+            if (file.isFile()) {
+                String filename = file.getName();
+                JButton buildUnit = new JButton(filename.substring(0, filename.lastIndexOf('.')));
+
+                buildUnit.addActionListener(e -> {
+                    Unit unit = new Unit(file.getPath(), Entity.nextId++, human.playerID());
+                    human.addBuildAct(new Build(unit));
+                });
+
+                unitButtons.add(buildUnit);
+                sidePanel.add(unitButtons, c);
+            }
+        }
+
+
+//        c.gridy++;
+//        sidePanel.add(infoView, c);
 
         return sidePanel;
     }
@@ -210,4 +231,12 @@ public class GUI extends JFrame {
     public boolean isClosed() {
         return wi.windowClosed;
     }
+
+    /**
+     * Check if mouse interact location is inside game grid
+     */
+    private boolean isValidPos(int x, int y) {
+        return x >= 0 && x < GameView.size && y >= 0 && y < GameView.size;
+    }
+
 }

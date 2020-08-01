@@ -1,12 +1,12 @@
 package core;
 
-import utils.Vector2d;
+import util.Vector2d;
 
 import java.awt.*;
 
 public class Constants {
     // Game settings
-    public static int GRID_SIZE = 40;
+    public static int GRID_SIZE = 20;
     public static Color[] PLAYER_COLOR = new Color[]{Color.RED, Color.BLUE, Color.GREEN};
     public static Vector2d[] BASE_LOCATION = new Vector2d[]{new Vector2d(2, 2), new Vector2d(GRID_SIZE - 3, GRID_SIZE - 3)};
 

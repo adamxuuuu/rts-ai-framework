@@ -1,11 +1,11 @@
-package visual;
+package UI;
 
-import core.entities.Building;
-import core.entities.Unit;
 import core.game.Game;
 import core.game.GameState;
 import core.game.Grid;
-import utils.Vector2d;
+import core.gameObject.Building;
+import core.gameObject.Unit;
+import util.Vector2d;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,17 +16,17 @@ public class GameView extends JComponent {
 
     // Game
     private final Game game;
-    private final int size;
     private GameState gs;
     private Grid grid;
 
     // Static
-    private static Dimension dimension;
+    static int size;
+    static Dimension dimension;
 
     GameView(Game game) {
         this.game = game;
         this.grid = game.getGrid().copy();
-        this.size = grid.getSize();
+        size = grid.size();
 
         dimension = new Dimension(GUI_GAME_VIEW_SIZE, GUI_GAME_VIEW_SIZE);
     }

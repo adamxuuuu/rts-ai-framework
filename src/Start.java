@@ -1,9 +1,9 @@
+import UI.GUI;
 import core.game.Game;
-import players.Agent;
-import players.HumanAgent;
-import players.RandomAgent;
-import utils.WindowInput;
-import visual.GUI;
+import player.Agent;
+import player.HumanAgent;
+import player.RandomAgent;
+import util.WindowInput;
 
 /**
  * Entry point

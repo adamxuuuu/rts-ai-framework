@@ -1,35 +1,32 @@
-package core.actions;
+package core.action;
 
-import core.entities.Unit;
-import core.entities.pathfinding.Pathfinder;
-import core.entities.pathfinding.PfNode;
+import UI.GameView;
 import core.game.GameState;
 import core.game.Grid;
-import utils.Vector2d;
-import visual.GameView;
+import core.gameObject.Unit;
+import core.gameObject.pathfinding.Pathfinder;
+import core.gameObject.pathfinding.PfNode;
+import util.Utils;
+import util.Vector2d;
 
 import java.util.Deque;
 
-public class Move implements Action {
+public class Move extends Action {
 
     private final long unitId;
     private final Vector2d gridDest;
-    private final Vector2d screenDest;
-    private boolean isComplete;
 
     private PfNode wayPoint;
 
-    public Move(long unitId, Vector2d screenDest, Vector2d gridDest) {
+    public Move(long unitId, Vector2d gridDest) {
         this.unitId = unitId;
-        this.screenDest = screenDest;
         this.gridDest = gridDest;
-        this.isComplete = false;
     }
 
     @Override
     public void exec(GameState gs, double elapsed) {
-        Unit unit = gs.getUnit(unitId);
         Grid grid = gs.getGrid();
+        Unit unit = grid.getUnit(unitId);
         // Unit may die during the process
         if (unit == null) {
             isComplete = true;
@@ -54,7 +51,7 @@ public class Move implements Action {
 
         Vector2d diff = GameView.gridToScreen(wp).subtract(unit.getScreenPos());
         Vector2d dv = diff.unify().mul(unit.getSpeed());
-        dv = new Vector2d(absMin(diff.x, dv.x), absMin(diff.y, dv.y));
+        dv = new Vector2d(Utils.absMin(diff.x, dv.x), Utils.absMin(diff.y, dv.y));
 
         // Move
         grid.updateGridPos(unit, unit.getScreenPos().add(dv));
@@ -63,23 +60,15 @@ public class Move implements Action {
         Vector2d sp = unit.getScreenPos();
         if (sp.equals(GameView.gridToScreen(wp))) {
             wayPoint = null;
-            if (sp.equals(screenDest)) {
+            if (sp.equals(GameView.gridToScreen(gridDest))) {
                 isComplete = true;
             }
         }
 
     }
 
-    private int absMin(int a, int b) {
-        return Math.abs(a) < Math.abs(b) ? a : b;
-    }
-
     @Override
     public Action copy() {
-        return new Move(unitId, screenDest, gridDest);
-    }
-
-    public boolean isComplete() {
-        return isComplete;
+        return new Move(unitId, gridDest);
     }
 }

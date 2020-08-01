@@ -1,13 +1,13 @@
 package core.game;
 
+import UI.GUI;
 import core.Constants;
-import core.actions.Action;
-import core.entities.Building;
-import core.entities.Entity;
-import players.Agent;
-import players.HumanAgent;
-import utils.FPSCounter;
-import visual.GUI;
+import core.action.Action;
+import core.gameObject.Building;
+import core.gameObject.Entity;
+import player.Agent;
+import player.HumanAgent;
+import util.FPSCounter;
 
 import java.util.Iterator;
 import java.util.Random;
@@ -54,12 +54,10 @@ public class Game {
         }
 
         for (int i = 0; i < numPlayers; i++) {
-            Building base = new Building(Building.BuildingType.BASE);
-            base.setEntityId(Entity.nextId++);
-            base.setAgentId(players[i].playerID());
+            Building base = new Building("./resources/building/base.json", Entity.nextId++, players[i].playerID());
             base.setGridPos(BASE_LOCATION[i]);
             if (!gs.addBuilding(base)) {
-                //TODO something went wrong
+                throw new IllegalArgumentException("Map does not have a base location");
             }
         }
     }
@@ -69,7 +67,7 @@ public class Game {
      * Update at a fix rate (16ms).
      * Render as fast as it can
      *
-     * @param frame the game frame
+     * @param frame the game graphical interface
      */
     public void run(GUI frame) {
         FPSCounter fpsCounter = new FPSCounter();
@@ -85,9 +83,9 @@ public class Game {
 
             // catch up
             while (lag >= TIME_PER_FRAME) {
-                update();
+                tick();
                 lag -= TIME_PER_FRAME;
-                fpsCounter.count();
+                fpsCounter.tick();
             }
 //            update(elapsed);
 //            fpsCounter.count();
@@ -98,14 +96,15 @@ public class Game {
                 break;
             }
 
-            fpsCounter.printResult(System.nanoTime());
-            // Render as fast as possible (hopefully)
+            // Render as fast as possible
             frame.render(gsCopy());
 
+            fpsCounter.incFrame();
+            fpsCounter.printResult(System.nanoTime(), 1);
         }
     }
 
-    private void update() {
+    private void tick() {
         for (Agent agent : players) {
             if (agent instanceof HumanAgent) {
                 Action act = ((HumanAgent) agent).getBuildAct();
@@ -131,9 +130,7 @@ public class Game {
                 }
             }
         }
-        // game update
-        gs.update();
-        // increment tick
+        // game state tick
         gs.tick();
     }
 

@@ -1,6 +1,6 @@
-package core.entities.pathfinding;
+package core.gameObject.pathfinding;
 
-import utils.Vector2d;
+import util.Vector2d;
 
 public class PfNode implements Comparable<PfNode> {
     private final int id;

@@ -1,11 +1,11 @@
 package core.game;
 
-import core.entities.Building;
-import core.entities.Unit;
-import utils.Vector2d;
+import core.action.Action;
+import core.gameObject.Building;
+import core.gameObject.Unit;
+import util.Vector2d;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -18,9 +18,6 @@ public class GameState {
     // The game grid
     private Grid grid;
 
-    // Ticks/frames of the game
-    private int tick = 0;
-
     GameState() {
         grid = new Grid(GRID_SIZE);
     }
@@ -29,16 +26,11 @@ public class GameState {
         return grid;
     }
 
-    public int getTick() {
-        return tick;
-    }
-
     public boolean gameOver() {
         return false;
     }
 
     public void tick() {
-        tick++;
     }
 
     /**
@@ -50,26 +42,27 @@ public class GameState {
         GameState copy = new GameState();
 
         copy.grid = this.grid.copy();
-        copy.tick = this.tick;
 
         return copy;
     }
 
-    boolean addBuilding(Building b) {
+    /**
+     * Only entry point for adding a building
+     *
+     * @return if adding is successful
+     */
+    public boolean addBuilding(Building b) {
+        if (b == null) {
+            return false;
+        }
         return grid.addBuilding(b);
     }
 
-    public Unit getUnit(long unitId) {
-        return grid.getUnit(unitId);
-    }
-
     /**
-     * Add a unit to the game
-     * If the unit is produced from base
-     * Calculate a nearby available position
+     * Only entry point for adding a unit
      *
      * @param u        {@link Unit} to add
-     * @param fromBase if the unit is produced from base
+     * @param fromBase if the unit is produced from base, calculate a nearby available position
      */
     public void addUnit(Unit u, boolean fromBase) {
         if (u == null) {
@@ -77,7 +70,7 @@ public class GameState {
         }
         if (fromBase) {
             Vector2d facPos = grid.getBuilding(u.getAgentId(), Building.BuildingType.BASE).getGridPos();
-            Vector2d spawn = grid.findNearby(facPos);
+            Vector2d spawn = grid.findNearby(facPos, 5);
             if (spawn == null) {
                 // TODO give indication to player
                 return;
@@ -88,21 +81,24 @@ public class GameState {
     }
 
     public Set<Long> allUnitIds() {
-        return units().keySet();
+        return grid.getUnits().keySet();
     }
 
-    public Collection<Unit> allUnits() {
-        return units().values();
-    }
-
-    Map<Long, Unit> units() {
-        return grid.getUnits();
+    public Unit[] allUnits() {
+        return grid.getUnits().values().toArray(Unit[]::new);
     }
 
     /**
      * Advance current game state by certain amount of time
      */
     public void update() {
-
     }
+
+    /**
+     * @return all available actions at current game state
+     */
+    public ArrayList<Action> getAllActions() {
+        return null;
+    }
+
 }

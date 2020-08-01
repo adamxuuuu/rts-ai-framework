@@ -1,16 +1,17 @@
 package core.game;
 
+import UI.GameView;
 import core.Constants;
-import core.entities.Building;
-import core.entities.Entity;
-import core.entities.Unit;
-import utils.Utils;
-import utils.Vector2d;
-import visual.GameView;
+import core.gameObject.Building;
+import core.gameObject.Entity;
+import core.gameObject.Unit;
+import util.Utils;
+import util.Vector2d;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class Grid {
 
@@ -35,6 +36,7 @@ public class Grid {
      * All units on the grid
      */
     private final Map<Long, Unit> units = new HashMap<>();
+    private final Map<Long, Entity> allEntities = new HashMap<>();
 
     public Grid() {
     }
@@ -51,33 +53,56 @@ public class Grid {
         generateTerrain();
     }
 
+    public Entity getEntity(long id) {
+        return allEntities.get(id);
+    }
+
+    public Entity getEnemyAt(int playerID, Vector2d gp) {
+        Building b = getBuildingAt(gp.x, gp.y);
+        if (b == null) {
+            return null;
+        }
+
+        if (b.getAgentId() != playerID) {
+            return b;
+        }
+
+        Optional<Unit> enemy = units.values().stream().filter(u -> u.getGridPos().equals(gp) && u.getAgentId() != playerID).findFirst();
+        return enemy.orElse(null);
+    }
+
     /**
      * Add a {@link Unit} to the map
      *
      * @param addUnit unit
      */
-    public void addUnit(Unit addUnit) {
+    void addUnit(Unit addUnit) {
         Vector2d gp = addUnit.getGridPos();
         if (!accessible(gp.x, gp.y) && occupied(gp.x, gp.y)) {
             return;
         }
 
         units.put(addUnit.getEntityId(), addUnit);
+        allEntities.put(addUnit.getEntityId(), addUnit);
     }
 
     /**
-     * Removes a {@link Unit} from the map
-     *
-     * @param u unit
+     * @param e {@link Entity} to be removed
      */
-    public void removeUnit(Unit u) {
-        units.remove(u.getEntityId());
+    public void removeEntity(Entity e) {
+        if (e instanceof Unit) {
+            units.remove(e.getEntityId());
+        } else if (e instanceof Building) {
+            Vector2d gp = e.getGridPos();
+            buildings[gp.x][gp.y] = null;
+        }
+        allEntities.remove(e.getEntityId());
     }
 
 
-    public Vector2d findNearby(Vector2d p) {
-        for (int radius = 1; radius < 5; radius++) {
-            for (Vector2d pos : p.neighborhood(radius, 0, size, true)) {
+    public Vector2d findNearby(Vector2d gp, int maxRange) {
+        for (int radius = 1; radius < maxRange; radius++) {
+            for (Vector2d pos : gp.neighborhood(radius, 0, size, true)) {
                 if (accessible(pos.x, pos.y) && !occupied(pos.x, pos.y)) {
                     return pos;
                 }
@@ -97,12 +122,13 @@ public class Grid {
         }
 
         buildings[gp.x][gp.y] = b;
+        allEntities.put(b.getEntityId(), b);
         return true;
     }
 
     /**
      * @param agentId owner
-     * @param bt      {@link core.entities.Building.BuildingType}
+     * @param bt      {@link core.gameObject.Building.BuildingType}
      * @return the {@link Building}
      */
     public Building getBuilding(long agentId, Building.BuildingType bt) {
@@ -211,7 +237,7 @@ public class Grid {
         return units.get(eId);
     }
 
-    public int getSize() {
+    public int size() {
         return size;
     }
 

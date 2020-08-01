@@ -1,9 +1,11 @@
 {
   "name": "light",
   "speed": 3,
-  "range": 20,
+  "range": 3,
   "cost": 100,
   "maxHp": 100,
-  "buildTime": 1
+  "attack": 2,
+  "buildTime": 1,
+  "rateOfFire": 1
 }
 

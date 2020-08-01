@@ -1,0 +1,22 @@
+package core.action;
+
+import core.game.GameState;
+
+public abstract class Action {
+
+    public boolean isComplete = false;
+
+    /**
+     * Execute this command under game state X
+     *
+     * @param gs the game state which the command is executed
+     */
+    public abstract void exec(GameState gs, double elapsed);
+
+    public abstract Action copy();
+
+    public boolean isComplete() {
+        return isComplete;
+    }
+
+}

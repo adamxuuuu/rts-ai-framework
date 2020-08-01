@@ -1,7 +1,7 @@
-package core.entities.pathfinding;
+package core.gameObject.pathfinding;
 
 import core.game.Grid;
-import utils.Vector2d;
+import util.Vector2d;
 
 import java.util.*;
 
@@ -51,7 +51,7 @@ public class Pathfinder {
                 return calculatePath(n);
 
             ArrayList<PfNode> neighbours = new ArrayList<>();
-            for (Vector2d neigh : n.getPosition().neighborhood(1, 0, grid.getSize(), false)) {
+            for (Vector2d neigh : n.getPosition().neighborhood(1, 0, grid.size(), false)) {
                 if (!grid.accessible(neigh.x, neigh.y)) {
                     // skip tile that can not access or has entity
                     continue;
