@@ -1,0 +1,17 @@
+{
+  "type": 1,
+  "name": "worker",
+  "speed": 3,
+  "range": 0,
+  "cost": 50,
+  "maxHp": 200,
+  "attack": 5,
+  "buildTime": 3,
+  "rateOfFire": 1,
+  "spriteKey": [
+    "scifiUnit_11.png",
+    "scifiUnit_23.png",
+    "scifiUnit_35.png",
+    "scifiUnit_47.png"
+  ]
+}
