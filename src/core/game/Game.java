@@ -63,8 +63,7 @@ public class Game {
     }
 
     /**
-     * Main game loop
-     * Update at a fix rate (16ms).
+     * Main game loop, Update at a fix rate (16ms).
      * Render as fast as it can
      *
      * @param frame the game graphical interface
@@ -81,57 +80,61 @@ public class Game {
             previous = current;
             lag += elapsed;
 
-            // catch up
+            // update at a fix time stamp
             while (lag >= TIME_PER_FRAME) {
                 tick();
                 lag -= TIME_PER_FRAME;
                 fpsCounter.tick();
             }
-//            update(elapsed);
-//            fpsCounter.count();
 
             boolean gameOver = gameOver();
             if (gameOver) {
                 //TODO Post game processing
+                frame.dispose();
                 break;
             }
 
             // Render as fast as possible
             frame.render(gsCopy());
-
             fpsCounter.incFrame();
+
             fpsCounter.printResult(System.nanoTime(), 1);
         }
     }
 
     private void tick() {
+        // Process human input/actions
+        processInput();
         for (Agent agent : players) {
             if (agent instanceof HumanAgent) {
-                Action act = ((HumanAgent) agent).getBuildAct();
-                if (act != null) {
-                    act.exec(gs, TIME_PER_FRAME);
-                    if (act.isComplete()) {
-                        ((HumanAgent) agent).pop();
-                    }
-                }
-                Iterator<Action> it = ((HumanAgent) agent).getUnitActs().values().iterator();
-                while (it.hasNext()) {
-                    Action next = it.next();
-                    if (next.isComplete()) {
-                        it.remove();
-                    } else {
-                        next.exec(gs, TIME_PER_FRAME);
-                    }
-                }
+                continue;
+            }
+            Action act = agent.act(gs);
+            gs.addAction(agent.playerID(), act);
+        }
+        // Advance game state by 16ms
+        gs.tick();
+    }
+
+    private void processInput() {
+        HumanAgent human = humanPlayer();
+        Action act = human.getBuildAct();
+        if (act != null) {
+            if (act.isComplete()) {
+                human.poll();
             } else {
-                Action act = agent.act(gs);
-                if (act != null) {
-                    act.exec(gs, TIME_PER_FRAME);
-                }
+                act.exec(gs, TIME_PER_FRAME);
             }
         }
-        // game state tick
-        gs.tick();
+        Iterator<Action> it = human.getUnitActs().values().iterator();
+        while (it.hasNext()) {
+            Action next = it.next();
+            if (next.isComplete()) {
+                it.remove();
+            } else {
+                next.exec(gs, TIME_PER_FRAME);
+            }
+        }
     }
 
     private boolean gameOver() {

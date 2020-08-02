@@ -1,4 +1,5 @@
 {
+  "type": 0,
   "name": "heavy",
   "speed": 1,
   "range": 5,
@@ -6,5 +7,11 @@
   "maxHp": 300,
   "attack": 5,
   "buildTime": 3,
-  "rateOfFire": 1
+  "rateOfFire": 3,
+  "spriteKey": [
+    "scifiUnit_09.png",
+    "scifiUnit_21.png",
+    "scifiUnit_33.png",
+    "scifiUnit_45.png"
+  ]
 }

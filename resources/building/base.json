@@ -3,5 +3,8 @@
   "name": "base",
   "cost": 800,
   "maxHp": 500,
-  "buildTime": 20
+  "buildTime": 20,
+  "spriteKey": [
+    "scifiStructure_01.png"
+  ]
 }

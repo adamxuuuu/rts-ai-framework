@@ -36,4 +36,9 @@ public class Build extends Action {
     public Action copy() {
         return null;
     }
+
+    @Override
+    public long actorId() {
+        return 0;
+    }
 }

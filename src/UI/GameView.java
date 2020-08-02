@@ -4,13 +4,17 @@ import core.game.Game;
 import core.game.GameState;
 import core.game.Grid;
 import core.gameObject.Building;
+import core.gameObject.Entity;
+import core.gameObject.Resource;
 import core.gameObject.Unit;
 import util.Vector2d;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
-import static core.Constants.*;
+import static core.Constants.CELL_SIZE;
+import static core.Constants.GUI_GAME_VIEW_SIZE;
 
 public class GameView extends JComponent {
 
@@ -88,30 +92,48 @@ public class GameView extends JComponent {
     }
 
     private void drawEntities(Graphics2D g) {
-        // buildings
+        // Buildings and resource
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 Building b = grid.getBuildingAt(i, j);
                 if (b != null) {
-                    Vector2d gp = b.getGridPos();
-                    g.setColor(PLAYER_COLOR[b.getAgentId()]);
-                    g.drawRect(gp.x * CELL_SIZE, gp.y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    g.drawImage(getSprite(b), i * CELL_SIZE, j * CELL_SIZE, this);
+//                    Vector2d gp = b.getGridPos();
+//                    g.setColor(PLAYER_COLOR[b.getAgentId()]);
+//                    g.drawRoundRect(gp.x * CELL_SIZE, gp.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE / 3, CELL_SIZE / 3);
+//                    g.drawString(String.valueOf(b.getCurrentHP()), gp.x * CELL_SIZE, gp.y * CELL_SIZE + CELL_SIZE / 4);
+                }
+                Resource r = grid.getResourcesAt(i, j);
+                if (r != null) {
+                    g.drawImage(getSprite(r), i * CELL_SIZE, j * CELL_SIZE, this);
+//                    g.setColor(Color.GREEN);
+//                    g.fillRect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                 }
             }
         }
 
-        // units
+        // Units
         for (Unit u : gs.allUnits()) {
             Vector2d sp = u.getScreenPos();
-            g.setColor(PLAYER_COLOR[u.getAgentId()]);
-            g.fillOval(sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+            g.drawImage(getSprite(u), sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, this);
+//            g.setColor(PLAYER_COLOR[u.getAgentId()]);
+//            double angle = (double) u.getCurrentHP() / u.getMaxHp() * 360;
+//            g.fillArc(sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE, 90, (int) Math.round(angle));
             if (GUI.selected.contains(u.getEntityId())) {
                 g.setColor(Color.BLACK);
-                g.drawOval(sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+                g.drawRect(sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
             }
-
         }
+    }
 
+    private BufferedImage getSprite(Entity e) {
+        SpriteSheet.SpriteProperty sp;
+        if (e instanceof Resource) {
+            sp = SpriteSheet.spritePropertyMap.get(e.getSpriteKey()[0]);
+        } else {
+            sp = SpriteSheet.spritePropertyMap.get(e.getSpriteKey()[e.getAgentId()]);
+        }
+        return GUI.spriteSheet.getSprite(sp);
     }
 
     /**

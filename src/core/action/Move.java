@@ -71,4 +71,9 @@ public class Move extends Action {
     public Action copy() {
         return new Move(unitId, gridDest);
     }
+
+    @Override
+    public long actorId() {
+        return unitId;
+    }
 }

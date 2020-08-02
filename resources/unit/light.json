@@ -1,4 +1,5 @@
 {
+  "type": 0,
   "name": "light",
   "speed": 3,
   "range": 3,
@@ -6,6 +7,12 @@
   "maxHp": 100,
   "attack": 2,
   "buildTime": 1,
-  "rateOfFire": 1
+  "rateOfFire": 1,
+  "spriteKey": [
+    "scifiUnit_01.png",
+    "scifiUnit_13.png",
+    "scifiUnit_25.png",
+    "scifiUnit_37.png"
+  ]
 }
 

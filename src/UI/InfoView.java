@@ -3,8 +3,8 @@ package UI;
 import javax.swing.*;
 import java.awt.*;
 
-import static core.Constants.GUI_SIDE_PANEL_HEIGHT;
 import static core.Constants.GUI_SIDE_PANEL_WIDTH;
+import static core.Constants.INFO_PANEL_HEIGHT;
 
 public class InfoView extends JComponent {
 
@@ -12,7 +12,7 @@ public class InfoView extends JComponent {
     private final Dimension size;
 
     InfoView() {
-        this.size = new Dimension(GUI_SIDE_PANEL_WIDTH, GUI_SIDE_PANEL_HEIGHT);
+        this.size = new Dimension(GUI_SIDE_PANEL_WIDTH, INFO_PANEL_HEIGHT);
     }
 
 }

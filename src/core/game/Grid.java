@@ -4,6 +4,7 @@ import UI.GameView;
 import core.Constants;
 import core.gameObject.Building;
 import core.gameObject.Entity;
+import core.gameObject.Resource;
 import core.gameObject.Unit;
 import util.Utils;
 import util.Vector2d;
@@ -15,7 +16,9 @@ import java.util.Optional;
 
 public class Grid {
 
-
+    /**
+     * Terrain type
+     */
     public enum TerrainType {WATER, LAND, MOUNTAIN}
 
     /**
@@ -28,14 +31,23 @@ public class Grid {
      */
     private float[][] heightMap;
 
+    /**
+     * Terrain type calculated based on height value
+     */
     private TerrainType[][] terrain;
 
+    /**
+     * Buildings
+     */
     private Building[][] buildings;
+
+    private Resource[][] resources;
 
     /**
      * All units on the grid
      */
     private final Map<Long, Unit> units = new HashMap<>();
+
     private final Map<Long, Entity> allEntities = new HashMap<>();
 
     public Grid() {
@@ -47,23 +59,25 @@ public class Grid {
         heightMap = new float[size][size];
         terrain = new TerrainType[size][size];
         buildings = new Building[size][size];
+        resources = new Resource[size][size];
 
         //---------- loading ----------//
         randomMap();
         generateTerrain();
+        initResources();
     }
 
     public Entity getEntity(long id) {
         return allEntities.get(id);
     }
 
+    public Resource getResourcesAt(int x, int y) {
+        return resources[x][y];
+    }
+
     public Entity getEnemyAt(int playerID, Vector2d gp) {
         Building b = getBuildingAt(gp.x, gp.y);
-        if (b == null) {
-            return null;
-        }
-
-        if (b.getAgentId() != playerID) {
+        if (b != null && b.getAgentId() != playerID) {
             return b;
         }
 
@@ -90,13 +104,14 @@ public class Grid {
      * @param e {@link Entity} to be removed
      */
     public void removeEntity(Entity e) {
+        long id = e.getEntityId();
         if (e instanceof Unit) {
-            units.remove(e.getEntityId());
+            units.remove(id);
         } else if (e instanceof Building) {
             Vector2d gp = e.getGridPos();
             buildings[gp.x][gp.y] = null;
         }
-        allEntities.remove(e.getEntityId());
+        allEntities.remove(id);
     }
 
 
@@ -128,14 +143,14 @@ public class Grid {
 
     /**
      * @param agentId owner
-     * @param bt      {@link core.gameObject.Building.BuildingType}
+     * @param bt      {@link Building.Type}
      * @return the {@link Building}
      */
-    public Building getBuilding(long agentId, Building.BuildingType bt) {
+    public Building getBuilding(long agentId, Building.Type bt) {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 Building b = getBuildingAt(i, j);
-                if (b != null && b.getBt() == bt && b.getAgentId() == agentId) {
+                if (b != null && b.getType() == bt && b.getAgentId() == agentId) {
                     return b;
                 }
             }
@@ -152,25 +167,30 @@ public class Grid {
         copyGrid.heightMap = new float[size][size];
         copyGrid.terrain = new TerrainType[size][size];
         copyGrid.buildings = new Building[size][size];
+        copyGrid.resources = new Resource[size][size];
 
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 copyGrid.heightMap[i][j] = this.heightMap[i][j];
                 copyGrid.terrain[i][j] = this.terrain[i][j];
                 copyGrid.buildings[i][j] = this.buildings[i][j];
+                copyGrid.resources[i][j] = this.resources[i][j];
             }
         }
 
-        for (Unit u : units.values()) {
-            Unit copy = (Unit) u.copy();
-            copyGrid.units.put(copy.getEntityId(), copy);
+        for (Entity e : allEntities.values()) {
+            Entity copy = e.copy();
+            if (copy instanceof Unit) {
+                copyGrid.units.put(copy.getEntityId(), (Unit) copy);
+            }
+            copyGrid.allEntities.put(copy.getEntityId(), copy);
         }
 
         return copyGrid;
     }
 
     /**
-     * Randomly generating height between 0.0 - 0.1
+     * Randomly generating height between -0.1 - 1
      */
     private void randomMap() {
         int offset = size / 6;
@@ -193,6 +213,12 @@ public class Grid {
                     terrain[i][j] = TerrainType.MOUNTAIN;
                 }
             }
+        }
+    }
+
+    private void initResources() {
+        for (Vector2d loc : Constants.RESOURCE_LOCATION) {
+            resources[loc.x][loc.y] = new Resource(Resource.Type.RICH);
         }
     }
 

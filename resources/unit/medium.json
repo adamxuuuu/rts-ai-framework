@@ -1,4 +1,5 @@
 {
+  "type": 0,
   "name": "medium",
   "speed": 2,
   "range": 4,
@@ -6,5 +7,11 @@
   "maxHp": 200,
   "attack": 3,
   "buildTime": 2,
-  "rateOfFire": 1
+  "rateOfFire": 2,
+  "spriteKey": [
+    "scifiUnit_06.png",
+    "scifiUnit_18.png",
+    "scifiUnit_30.png",
+    "scifiUnit_42.png"
+  ]
 }

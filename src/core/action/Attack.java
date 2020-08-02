@@ -1,6 +1,7 @@
 package core.action;
 
 import UI.GameView;
+import core.Constants;
 import core.game.GameState;
 import core.game.Grid;
 import core.gameObject.Entity;
@@ -40,9 +41,17 @@ public class Attack extends Action {
         Vector2d attackPos = attacker.getGridPos();
         Vector2d targetPos = target.getGridPos();
 
+        // Use euclidean distance to check if in range
         boolean inRange = Vector2d.euclideanDistance(attackPos, targetPos) < range;
         if (inRange) {
+            if (attacker.getTimeTillNextAttack() > 0) {
+                return;
+            }
+            System.out.println("attack!!!!!");
+            attacker.setTimeTillNextAttack(attacker.getRateOfFire() * Constants.SECOND_NANO);
+
             target.takeDamage(attacker.getAttack());
+            // Kill the target
             if (target.getCurrentHP() <= 0) {
                 grid.removeEntity(target);
             }
@@ -50,7 +59,7 @@ public class Attack extends Action {
             Pathfinder pf = new Pathfinder(attackPos);
             LinkedList<Vector2d> temp = targetPos.neighborhood(range, 0, grid.size(), false);
 
-            Vector2d dest = Utils.shortestPos(attackPos, temp);
+            Vector2d dest = shortestPos(attackPos, temp, grid);
             Deque<PfNode> path = pf.pathTo(dest, grid);
 
             if (path != null && !path.isEmpty() && wayPoint == null) {
@@ -78,13 +87,29 @@ public class Attack extends Action {
                     isComplete = true;
                 }
             }
-
         }
+    }
 
+    public Vector2d shortestPos(Vector2d start, LinkedList<Vector2d> ps, Grid grid) {
+        double min = Double.MAX_VALUE;
+        Vector2d res = null;
+        for (Vector2d p : ps) {
+            double tempDist = Vector2d.euclideanDistance(p, start);
+            if (tempDist < min && grid.accessible(p.x, p.y)) {
+                min = tempDist;
+                res = p;
+            }
+        }
+        return res;
     }
 
     @Override
     public Action copy() {
-        return null;
+        return new Attack(attackerId, targetId);
+    }
+
+    @Override
+    public long actorId() {
+        return attackerId;
     }
 }

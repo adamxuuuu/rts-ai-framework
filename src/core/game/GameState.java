@@ -1,15 +1,16 @@
 package core.game;
 
 import core.action.Action;
+import core.action.Build;
 import core.gameObject.Building;
 import core.gameObject.Unit;
 import util.Vector2d;
 
-import java.util.ArrayList;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 import static core.Constants.GRID_SIZE;
+import static core.Constants.TIME_PER_FRAME;
 
 public class GameState {
 
@@ -18,8 +19,20 @@ public class GameState {
     // The game grid
     private Grid grid;
 
+    // UnitId <-> unit actions
+    private final Map<Long, Action> unitActions;
+    // PlayerId <-> build actions
+    private final Map<Integer, Queue<Action>> buildActions;
+
+    // PlayerId <-> resource storage
+    private final Map<Integer, Integer> resources;
+
     GameState() {
         grid = new Grid(GRID_SIZE);
+
+        unitActions = new HashMap<>();
+        buildActions = new HashMap<>();
+        resources = new HashMap<>();
     }
 
     public Grid getGrid() {
@@ -31,6 +44,34 @@ public class GameState {
     }
 
     public void tick() {
+        // Reload unit every tick
+        for (Unit u : grid.getUnits().values()) {
+            u.reload(-TIME_PER_FRAME);
+        }
+
+        // Execute build actions
+        for (Iterator<Queue<Action>> it = buildActions.values().iterator(); it.hasNext(); ) {
+            Queue<Action> next = it.next();
+            Action build = next.peek();
+            if (build != null) {
+                if (build.isComplete()) {
+                    next.poll();
+                } else {
+                    build.exec(this, TIME_PER_FRAME);
+                }
+            }
+        }
+
+        // Execute unit actions
+        for (Iterator<Action> it = unitActions.values().iterator(); it.hasNext(); ) {
+            Action next = it.next();
+            if (next.isComplete()) {
+                it.remove();
+            } else {
+                next.exec(this, TIME_PER_FRAME);
+            }
+        }
+
     }
 
     /**
@@ -69,7 +110,7 @@ public class GameState {
             return;
         }
         if (fromBase) {
-            Vector2d facPos = grid.getBuilding(u.getAgentId(), Building.BuildingType.BASE).getGridPos();
+            Vector2d facPos = grid.getBuilding(u.getAgentId(), Building.Type.BASE).getGridPos();
             Vector2d spawn = grid.findNearby(facPos, 5);
             if (spawn == null) {
                 // TODO give indication to player
@@ -101,4 +142,18 @@ public class GameState {
         return null;
     }
 
+    public synchronized void addAction(int playerId, Action act) {
+        if (act instanceof Build) {
+            Queue<Action> actList = buildActions.get(playerId);
+            if (actList == null) {
+                actList = new LinkedList<>();
+                actList.add(act);
+                buildActions.put(playerId, actList);
+            } else {
+                actList.add(act);
+            }
+        } else {
+            unitActions.put(act.actorId(), act);
+        }
+    }
 }

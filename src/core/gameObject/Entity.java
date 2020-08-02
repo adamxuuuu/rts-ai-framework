@@ -1,5 +1,6 @@
 package core.gameObject;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import util.Vector2d;
 
@@ -31,8 +32,9 @@ public abstract class Entity {
     protected String name; // Name of the unit
     protected int cost; // Resource needed to build
     protected long buildTime; // Time (second) for this entity to be built
-    protected int maxHP; // Max hit point
+    protected int maxHp; // Max hit point
     protected int currentHP; // Current hip point
+    protected String[] spriteKey;
 
     public void takeDamage(int amount) {
         currentHP -= amount;
@@ -41,9 +43,14 @@ public abstract class Entity {
     protected void loadBaseProperties(JSONObject jo) {
         this.name = (String) jo.get("name");
         this.cost = Math.toIntExact((Long) jo.get("cost"));
-        this.maxHP = Math.toIntExact((Long) jo.get("maxHp"));
+        this.maxHp = Math.toIntExact((Long) jo.get("maxHp"));
         this.buildTime = Math.toIntExact((Long) jo.get("buildTime"));
-        currentHP = maxHP;
+        JSONArray ja = (JSONArray) jo.get("spriteKey");
+        spriteKey = new String[ja.size()];
+        for (int i = 0; i < ja.size(); i++) {
+            spriteKey[i] = (String) ja.get(i);
+        }
+        currentHP = maxHp;
     }
 
     /**
@@ -93,8 +100,27 @@ public abstract class Entity {
         return currentHP;
     }
 
+    public void setCurrentHP(int currentHP) {
+        this.currentHP = currentHP;
+    }
+
+    public int getMaxHp() {
+        return maxHp;
+    }
+
+    public void setMaxHp(int maxHp) {
+        this.maxHp = maxHp;
+    }
+
     public int getCost() {
         return cost;
     }
 
+    public String[] getSpriteKey() {
+        return spriteKey;
+    }
+
+    public void setSpriteKey(String[] spriteKey) {
+        this.spriteKey = spriteKey;
+    }
 }

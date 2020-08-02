@@ -35,8 +35,8 @@ public class HumanAgent extends Agent {
         return buildActions.peek();
     }
 
-    public void pop() {
-        buildActions.remove();
+    public void poll() {
+        buildActions.poll();
     }
 
     @Override

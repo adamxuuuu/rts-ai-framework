@@ -16,6 +16,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
@@ -29,21 +30,22 @@ public class GUI extends JFrame {
     private GameState gs;
     private Grid grid;
 
-    // Frames
+    // Panel
     private final GameView gameView;
     private final InfoView infoView;
-    private final WindowInput wi;
 
     private final double screenDiagonal;
     private final Random rnd = new Random();
     final int scale = 1;
 
-    // Human controller
+    // Controller
     private final HumanAgent human;
+    private final WindowInput wi;
 
     // Unit bounding box selection
     private Vector2d startDrag, endDrag;
     static ArrayList<Long> selected = new ArrayList<>();
+    static SpriteSheet spriteSheet = null;
 
     public GUI(Game game, String title, WindowInput wi, boolean closeAppOnClosingWindow, HumanAgent human) {
         super(title);
@@ -62,13 +64,14 @@ public class GUI extends JFrame {
         GUI_GAME_VIEW_SIZE = (int) (0.46 * screenDiagonal * scale);
         CELL_SIZE = GUI_GAME_VIEW_SIZE / game.getGrid().size() * scale;
         GUI_SIDE_PANEL_WIDTH = (int) (0.2 * screenDiagonal * scale);
-        GUI_SIDE_PANEL_HEIGHT = (int) (0.4 * screenDiagonal * scale);
+        INFO_PANEL_HEIGHT = (int) (0.4 * screenDiagonal * scale);
 
         this.game = game;
         this.wi = wi;
         this.human = human;
         this.gameView = new GameView(game);
         this.infoView = new InfoView();
+        initSpriteSheet();
 
         // Frame layout
         GridBagLayout gbl = new GridBagLayout();
@@ -98,6 +101,12 @@ public class GUI extends JFrame {
         }
 
         repaint();
+    }
+
+    private void initSpriteSheet() {
+        ImageLoader loader = new ImageLoader();
+        BufferedImage temp = loader.loadImage("./resources/sprite/rts_spritesheet.png");
+        spriteSheet = new SpriteSheet(temp);
     }
 
     private JPanel createGamePanel() {

@@ -1,6 +1,5 @@
 package util;
 
-import java.util.LinkedList;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Utils {
@@ -13,17 +12,5 @@ public class Utils {
         return Math.abs(a) < Math.abs(b) ? a : b;
     }
 
-    public static Vector2d shortestPos(Vector2d start, LinkedList<Vector2d> ps) {
-        double min = Double.MAX_VALUE;
-        Vector2d res = null;
-        for (Vector2d p : ps) {
-            double tempDist = Vector2d.euclideanDistance(p, start);
-            if (tempDist < min) {
-                min = tempDist;
-                res = p;
-            }
-        }
-        return res;
-    }
 
 }

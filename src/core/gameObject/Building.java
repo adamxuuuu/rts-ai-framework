@@ -7,12 +7,12 @@ import java.io.FileReader;
 
 public class Building extends Entity {
 
-    public enum BuildingType {BASE, DEFENCE}
+    public enum Type {BASE, DEFENCE}
 
-    private BuildingType bt;
+    private Type type;
 
-    Building(BuildingType bt) {
-        this.bt = bt;
+    Building(Type type) {
+        this.type = type;
     }
 
     public Building(String filename, long entityId, int agentId) {
@@ -31,22 +31,23 @@ public class Building extends Entity {
         this.agentId = agentId;
     }
 
-    public BuildingType getBt() {
-        return bt;
-    }
-
     private void load(JSONObject jo) {
         super.loadBaseProperties(jo);
-        this.bt = BuildingType.values()[Math.toIntExact((Long) jo.get("type"))];
+        this.type = Type.values()[Math.toIntExact((Long) jo.get("type"))];
     }
 
     @Override
     public Entity copy() {
-        Building copy = new Building(bt);
+        Building copy = new Building(type);
         copy.setEntityId(entityId);
         copy.setAgentId(agentId);
         copy.setGridPos(gridPos);
         copy.setScreenPos(screenPos);
+        copy.setSpriteKey(spriteKey);
         return copy;
+    }
+
+    public Type getType() {
+        return type;
     }
 }

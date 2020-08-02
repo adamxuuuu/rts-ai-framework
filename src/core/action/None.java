@@ -17,6 +17,11 @@ public class None extends Action {
     }
 
     @Override
+    public long actorId() {
+        return 0;
+    }
+
+    @Override
     public boolean isComplete() {
         return false;
     }
