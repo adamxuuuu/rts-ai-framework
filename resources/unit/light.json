@@ -4,7 +4,7 @@
   "speed": 3,
   "range": 3,
   "cost": 100,
-  "maxHp": 100,
+  "maxHp": 10,
   "attack": 2,
   "buildTime": 1,
   "rateOfFire": 1,

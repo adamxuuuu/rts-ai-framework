@@ -6,9 +6,13 @@ import java.awt.*;
 
 public class Constants {
     // Default game settings
-    public static int GRID_SIZE = 20;
-    public static Color[] PLAYER_COLOR = new Color[]{Color.RED, Color.BLUE, Color.GREEN};
-    public static Vector2d[] BASE_LOCATION = new Vector2d[]{new Vector2d(2, 2), new Vector2d(GRID_SIZE - 3, GRID_SIZE - 3)};
+    public static int GRID_SIZE = 30;
+    public static Color[] PLAYER_COLOR = new Color[]{Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW};
+    public static Vector2d[] BASE_LOCATION = new Vector2d[]{
+            new Vector2d(2, 2),
+            new Vector2d(GRID_SIZE - 3, GRID_SIZE - 3),
+            new Vector2d(2, GRID_SIZE - 3),
+            new Vector2d(GRID_SIZE - 3, 2)};
     public static Vector2d[] RESOURCE_LOCATION = new Vector2d[]{
             new Vector2d(0, 0),
             new Vector2d(1, 0),
@@ -19,9 +23,10 @@ public class Constants {
     };
 
     // FPS
-    public static int TARGET_FPS = 60;
+    public static int TARGET_TPS = 24;
+    public static long SECOND_MILLI = (long) 1e6;
     public static long SECOND_NANO = (long) 1e9;
-    public static long TIME_PER_FRAME = SECOND_NANO / TARGET_FPS;
+    public static long TIME_PER_TICK = SECOND_NANO / TARGET_TPS;
 
     // GUI setting
     public static int CELL_SIZE;

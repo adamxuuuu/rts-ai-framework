@@ -45,6 +45,7 @@ public class GUI extends JFrame {
     // Unit bounding box selection
     private Vector2d startDrag, endDrag;
     static ArrayList<Long> selected = new ArrayList<>();
+
     static SpriteSheet spriteSheet = null;
 
     public GUI(Game game, String title, WindowInput wi, boolean closeAppOnClosingWindow, HumanAgent human) {
@@ -67,11 +68,15 @@ public class GUI extends JFrame {
         INFO_PANEL_HEIGHT = (int) (0.4 * screenDiagonal * scale);
 
         this.game = game;
-        this.wi = wi;
         this.human = human;
+        this.wi = wi;
         this.gameView = new GameView(game);
         this.infoView = new InfoView();
         initSpriteSheet();
+
+        setFocusable(true);
+        requestFocus();
+        this.addKeyListener(new KeyController(gameView));
 
         // Frame layout
         GridBagLayout gbl = new GridBagLayout();
@@ -105,41 +110,39 @@ public class GUI extends JFrame {
 
     private void initSpriteSheet() {
         ImageLoader loader = new ImageLoader();
-        BufferedImage temp = loader.loadImage("./resources/sprite/rts_spritesheet.png");
-        spriteSheet = new SpriteSheet(temp);
+        BufferedImage ss = loader.loadImage("./resources/sprite/rts_spritesheet.png");
+        spriteSheet = new SpriteSheet(ss);
     }
 
     private JPanel createGamePanel() {
 
         JPanel panel = new JPanel();
-
         panel.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 Vector2d sp = new Vector2d(e.getX(), e.getY());
                 Vector2d gp = GameView.screenToGrid(sp);
+                // Select
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     selected.clear();
                     Long selectedId = grid.selectUnitId(sp);
                     if (selectedId != null) {
                         selected.add(selectedId);
                     }
-                    // Select
-                } else if (e.getButton() == MouseEvent.BUTTON3) {
                     // Interact
+                } else if (e.getButton() == MouseEvent.BUTTON3) {
                     if (!isValidPos(gp.x, gp.y) || !grid.accessible(gp.x, gp.y)) {
                         return;
                     }
 
                     Entity enemy = grid.getEnemyAt(human.playerID(), gp);
-
                     if (enemy == null) {
                         for (long uId : selected) {
                             // Add a move action to the human player's action map
-                            human.addUnitAct(uId, new Move(uId, gp));
+                            human.addUnitAct(uId, new Move(grid.getUnit(uId), gp, grid));
                         }
                     } else {
-                        for (Long uId : selected) {
+                        for (long uId : selected) {
                             human.addUnitAct(uId, new Attack(uId, enemy.getEntityId()));
                         }
                     }
@@ -164,7 +167,8 @@ public class GUI extends JFrame {
 
             @Override
             public void mouseEntered(MouseEvent e) {
-
+                setFocusable(true);
+                requestFocus();
             }
 
             @Override

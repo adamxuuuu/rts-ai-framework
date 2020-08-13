@@ -256,11 +256,11 @@ public class Grid {
     /**
      * Get the game entity with Id
      *
-     * @param eId entity Id
+     * @param unitId entity Id
      * @return the entity or null if the entity doesn't exist
      */
-    public Unit getUnit(long eId) {
-        return units.get(eId);
+    public Unit getUnit(long unitId) {
+        return units.get(unitId);
     }
 
     public int size() {

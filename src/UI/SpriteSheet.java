@@ -20,9 +20,22 @@ public class SpriteSheet {
      * Sprite sheet
      */
     private final BufferedImage ss;
-    static final Map<String, SpriteProperty> spritePropertyMap = new HashMap<>();
+    private final Map<String, BufferedImage> spriteMap = new HashMap<>();
 
-    static {
+    public SpriteSheet(BufferedImage ss) {
+        this.ss = ss;
+        readFromXml();
+    }
+
+    public BufferedImage getSubSprite(String name) {
+        return spriteMap.get(name);
+    }
+
+    private BufferedImage getSubSprite(int x, int y, int w, int h) {
+        return ss.getSubimage(x, y, w, h);
+    }
+
+    private void readFromXml() {
         File file = new File("./resources/sprite/rts_spritesheet.xml");
         DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory
                 .newInstance();
@@ -45,22 +58,11 @@ public class SpriteSheet {
                 String width = subTextureElement.getAttribute("width");
                 String height = subTextureElement.getAttribute("height");
 
-                spritePropertyMap.put(name, new SpriteProperty(Integer.parseInt(x), Integer.parseInt(y),
-                        Integer.parseInt(width), Integer.parseInt(height)));
+                BufferedImage subImg = getSubSprite(Integer.parseInt(x), Integer.parseInt(y),
+                        Integer.parseInt(width), Integer.parseInt(height));
+                spriteMap.put(name, subImg);
             }
         }
-    }
-
-    public SpriteSheet(BufferedImage ss) {
-        this.ss = ss;
-    }
-
-    public BufferedImage getSprite(int x, int y, int w, int h) {
-        return ss.getSubimage(x, y, w, h);
-    }
-
-    public BufferedImage getSprite(SpriteProperty sp) {
-        return getSprite(sp.startX, sp.startY, sp.width, sp.height);
     }
 
     static class SpriteProperty {

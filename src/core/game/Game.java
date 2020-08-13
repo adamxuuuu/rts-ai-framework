@@ -7,13 +7,12 @@ import core.gameObject.Building;
 import core.gameObject.Entity;
 import player.Agent;
 import player.HumanAgent;
-import util.FPSCounter;
 
 import java.util.Iterator;
 import java.util.Random;
 
 import static core.Constants.BASE_LOCATION;
-import static core.Constants.TIME_PER_FRAME;
+import static core.Constants.TIME_PER_TICK;
 
 public class Game {
 
@@ -69,8 +68,6 @@ public class Game {
      * @param frame the game graphical interface
      */
     public void run(GUI frame) {
-        FPSCounter fpsCounter = new FPSCounter();
-
         // Main game loop
         long previous = System.nanoTime();
         long lag = 0;
@@ -81,10 +78,9 @@ public class Game {
             lag += elapsed;
 
             // update at a fix time stamp
-            while (lag >= TIME_PER_FRAME) {
+            while (lag >= TIME_PER_TICK) {
                 tick();
-                lag -= TIME_PER_FRAME;
-                fpsCounter.tick();
+                lag -= TIME_PER_TICK;
             }
 
             boolean gameOver = gameOver();
@@ -96,9 +92,6 @@ public class Game {
 
             // Render as fast as possible
             frame.render(gsCopy());
-            fpsCounter.incFrame();
-
-            fpsCounter.printResult(System.nanoTime(), 1);
         }
     }
 
@@ -123,7 +116,7 @@ public class Game {
             if (act.isComplete()) {
                 human.poll();
             } else {
-                act.exec(gs, TIME_PER_FRAME);
+                act.exec(gs, TIME_PER_TICK);
             }
         }
         Iterator<Action> it = human.getUnitActs().values().iterator();
@@ -132,7 +125,7 @@ public class Game {
             if (next.isComplete()) {
                 it.remove();
             } else {
-                next.exec(gs, TIME_PER_FRAME);
+                next.exec(gs, TIME_PER_TICK);
             }
         }
     }

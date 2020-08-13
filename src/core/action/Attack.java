@@ -1,6 +1,5 @@
 package core.action;
 
-import UI.GameView;
 import core.Constants;
 import core.game.GameState;
 import core.game.Grid;
@@ -47,7 +46,6 @@ public class Attack extends Action {
             if (attacker.getTimeTillNextAttack() > 0) {
                 return;
             }
-            System.out.println("attack!!!!!");
             attacker.setTimeTillNextAttack(attacker.getRateOfFire() * Constants.SECOND_NANO);
 
             target.takeDamage(attacker.getAttack());
@@ -56,51 +54,14 @@ public class Attack extends Action {
                 grid.removeEntity(target);
             }
         } else {
-            Pathfinder pf = new Pathfinder(attackPos);
             LinkedList<Vector2d> temp = targetPos.neighborhood(range, 0, grid.size(), false);
+            Vector2d dest = Utils.shortestPos(attackPos, temp, grid);
 
-            Vector2d dest = shortestPos(attackPos, temp, grid);
+            Pathfinder pf = new Pathfinder(attackPos);
             Deque<PfNode> path = pf.pathTo(dest, grid);
 
-            if (path != null && !path.isEmpty() && wayPoint == null) {
-                wayPoint = path.pop();
-            }
-
-            if (wayPoint == null) {
-                isComplete = true;
-                return;
-            }
-            Vector2d wp = wayPoint.getPosition();
-
-            Vector2d diff = GameView.gridToScreen(wp).subtract(attacker.getScreenPos());
-            Vector2d dv = diff.unify().mul(attacker.getSpeed());
-            dv = new Vector2d(Utils.absMin(diff.x, dv.x), Utils.absMin(diff.y, dv.y));
-
-            // Move
-            grid.updateGridPos(attacker, attacker.getScreenPos().add(dv));
-
-            // Check if reached waypoint or destination
-            Vector2d sp = attacker.getScreenPos();
-            if (sp.equals(GameView.gridToScreen(wp))) {
-                wayPoint = null;
-                if (sp.equals(GameView.gridToScreen(dest))) {
-                    isComplete = true;
-                }
-            }
+            isComplete = Pathfinder.move(grid, path, dest, attacker);
         }
-    }
-
-    public Vector2d shortestPos(Vector2d start, LinkedList<Vector2d> ps, Grid grid) {
-        double min = Double.MAX_VALUE;
-        Vector2d res = null;
-        for (Vector2d p : ps) {
-            double tempDist = Vector2d.euclideanDistance(p, start);
-            if (tempDist < min && grid.accessible(p.x, p.y)) {
-                min = tempDist;
-                res = p;
-            }
-        }
-        return res;
     }
 
     @Override

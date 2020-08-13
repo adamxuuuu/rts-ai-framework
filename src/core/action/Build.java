@@ -16,6 +16,11 @@ public class Build extends Action {
         this.buildTime = entity.getBuildTime() * Constants.SECOND_NANO;
     }
 
+    public Build(Entity entity, long buildTime) {
+        this.entity = entity;
+        this.buildTime = buildTime;
+    }
+
     @Override
     public void exec(GameState gs, double elapsed) {
         buildTime -= elapsed;
@@ -34,7 +39,7 @@ public class Build extends Action {
 
     @Override
     public Action copy() {
-        return null;
+        return new Build(entity, buildTime);
     }
 
     @Override

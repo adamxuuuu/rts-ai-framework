@@ -7,32 +7,41 @@ import core.gameObject.Building;
 import core.gameObject.Entity;
 import core.gameObject.Resource;
 import core.gameObject.Unit;
+import util.FPSCounter;
+import util.Utils;
 import util.Vector2d;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.RescaleOp;
 
 import static core.Constants.CELL_SIZE;
 import static core.Constants.GUI_GAME_VIEW_SIZE;
 
 public class GameView extends JComponent {
 
+    static int size;
+    static Dimension dimension;
+
     // Game
     private final Game game;
     private GameState gs;
     private Grid grid;
 
-    // Static
-    static int size;
-    static Dimension dimension;
+    // Setting
+    private boolean showGrid;
+    private final FPSCounter fpsCounter;
 
     GameView(Game game) {
+        dimension = new Dimension(GUI_GAME_VIEW_SIZE, GUI_GAME_VIEW_SIZE);
+
         this.game = game;
         this.grid = game.getGrid().copy();
         size = grid.size();
+        this.fpsCounter = new FPSCounter();
+        fpsCounter.start();
 
-        dimension = new Dimension(GUI_GAME_VIEW_SIZE, GUI_GAME_VIEW_SIZE);
     }
 
     void render(GameState gs) {
@@ -49,6 +58,11 @@ public class GameView extends JComponent {
         paint(g2d);
 
         Toolkit.getDefaultToolkit().sync();
+
+        // Count frames
+        fpsCounter.frame(); //added line (step 4).
+        g.setFont(new Font("Arial", Font.BOLD, 25));
+        g.drawString("FPS: " + fpsCounter.get(), 5, dimension.height); //added line (step 5).
     }
 
     private void paint(Graphics2D g) {
@@ -67,6 +81,7 @@ public class GameView extends JComponent {
         if (grid == null) {
             return;
         }
+        BufferedImage tile;
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
 //                g.setColor(Color.BLACK);
@@ -74,19 +89,23 @@ public class GameView extends JComponent {
                 Grid.TerrainType tt = grid.getTerrainAt(i, j);
                 switch (tt) {
                     case WATER -> {
-                        g.setColor(Color.CYAN);
-                        g.fillRect(j * CELL_SIZE, i * CELL_SIZE,
-                                CELL_SIZE, CELL_SIZE);
+                        tile = getSprite("scifiTile_13.png");
+//                        g.setColor(Color.CYAN);
+//                        g.fillRect(j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                     }
-                    case LAND -> g.setColor(Color.WHITE);
+                    case LAND -> tile = getSprite("scifiTile_41.png"); //g.setColor(Color.WHITE);
                     case MOUNTAIN -> {
-                        g.setColor(Color.DARK_GRAY);
-                        g.fillRect(j * CELL_SIZE, i * CELL_SIZE,
-                                CELL_SIZE, CELL_SIZE);
+                        tile = getSprite("scifiTile_28.png");
+//                        g.setColor(Color.DARK_GRAY);
+//                        g.fillRect(j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                     }
+                    default -> throw new IllegalArgumentException("New terrain type not implemented");
                 }
-                g.drawRect(j * CELL_SIZE, i * CELL_SIZE,
-                        CELL_SIZE, CELL_SIZE);
+                drawImage(tile, j * CELL_SIZE, i * CELL_SIZE, g);
+
+                if (showGrid) {
+                    g.drawRect(j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
             }
         }
     }
@@ -97,17 +116,15 @@ public class GameView extends JComponent {
             for (int j = 0; j < size; j++) {
                 Building b = grid.getBuildingAt(i, j);
                 if (b != null) {
-                    g.drawImage(getSprite(b), i * CELL_SIZE, j * CELL_SIZE, this);
-//                    Vector2d gp = b.getGridPos();
-//                    g.setColor(PLAYER_COLOR[b.getAgentId()]);
-//                    g.drawRoundRect(gp.x * CELL_SIZE, gp.y * CELL_SIZE, CELL_SIZE, CELL_SIZE, CELL_SIZE / 3, CELL_SIZE / 3);
-//                    g.drawString(String.valueOf(b.getCurrentHP()), gp.x * CELL_SIZE, gp.y * CELL_SIZE + CELL_SIZE / 4);
+                    drawImage(getSprite(b), i * CELL_SIZE, j * CELL_SIZE, g);
+                    int barWidth = (int) ((double) b.getCurrentHP() / b.getMaxHp() * CELL_SIZE);
+                    g.setColor(Color.GREEN);
+                    drawHealthBar(g, i * CELL_SIZE + CELL_SIZE / 7, j * CELL_SIZE + CELL_SIZE / 7, barWidth);
+                    continue;
                 }
                 Resource r = grid.getResourcesAt(i, j);
                 if (r != null) {
-                    g.drawImage(getSprite(r), i * CELL_SIZE, j * CELL_SIZE, this);
-//                    g.setColor(Color.GREEN);
-//                    g.fillRect(i * CELL_SIZE, j * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                    drawImage(getSprite(r), i * CELL_SIZE, j * CELL_SIZE, g);
                 }
             }
         }
@@ -115,25 +132,46 @@ public class GameView extends JComponent {
         // Units
         for (Unit u : gs.allUnits()) {
             Vector2d sp = u.getScreenPos();
-            g.drawImage(getSprite(u), sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, this);
-//            g.setColor(PLAYER_COLOR[u.getAgentId()]);
-//            double angle = (double) u.getCurrentHP() / u.getMaxHp() * 360;
-//            g.fillArc(sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE, 90, (int) Math.round(angle));
-            if (GUI.selected.contains(u.getEntityId())) {
-                g.setColor(Color.BLACK);
-                g.drawRect(sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+            BufferedImage bi = getSprite(u);
+            float[] scales = {1f, 1f, 1f, 1f};
+            float[] offsets = new float[4];
+            // Health bar
+            if (u.isDamaged()) {
+                g.setColor(Color.GREEN);
+                int barWidth = (int) ((double) u.getCurrentHP() / u.getMaxHp() * CELL_SIZE / 3);
+                drawHealthBar(g, sp.x, sp.y, barWidth);
             }
+
+            if (GUI.selected.contains(u.getEntityId())) {
+//                g.setColor(Color.DARK_GRAY);
+//                g.drawRect(sp.x - CELL_SIZE / 2, sp.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+                scales = new float[]{1f, 1f, 1f, 0.8f};
+            }
+            RescaleOp rop = new RescaleOp(scales, offsets, null);
+            BufferedImage resized = Utils.scaleDown(bi, (double) (CELL_SIZE * CELL_SIZE) / (bi.getHeight() * bi.getWidth()));
+            g.drawImage(resized, rop, sp.x - resized.getWidth() / 2, sp.y - resized.getHeight() / 2);
         }
     }
 
     private BufferedImage getSprite(Entity e) {
-        SpriteSheet.SpriteProperty sp;
-        if (e instanceof Resource) {
-            sp = SpriteSheet.spritePropertyMap.get(e.getSpriteKey()[0]);
+        if (e instanceof Resource || e instanceof Building) {
+            return GUI.spriteSheet.getSubSprite(e.getSpriteKey()[0]);
         } else {
-            sp = SpriteSheet.spritePropertyMap.get(e.getSpriteKey()[e.getAgentId()]);
+            return GUI.spriteSheet.getSubSprite(e.getSpriteKey()[e.getAgentId()]);
         }
-        return GUI.spriteSheet.getSprite(sp);
+    }
+
+    private BufferedImage getSprite(String path) {
+        return GUI.spriteSheet.getSubSprite(path);
+    }
+
+    private void drawImage(BufferedImage bi, int x, int y, Graphics2D g) {
+        g.drawImage(bi, x, y, CELL_SIZE, CELL_SIZE, this);
+//        g.drawImage(bi, x, y, this);
+    }
+
+    private void drawHealthBar(Graphics2D g, int x, int y, int barWidth) {
+        g.fillRect(x - CELL_SIZE / 6, (int) (y - CELL_SIZE / 2.5), barWidth, CELL_SIZE / 10);
     }
 
     /**
@@ -163,4 +201,11 @@ public class GameView extends JComponent {
         return new Vector2d((int) x2, (int) y2);
     }
 
+    public void toggleGrid() {
+        showGrid = !showGrid;
+    }
+
+    void drawSelectionBox(Graphics2D g, Point start, Point end) {
+        g.drawRect(start.x, start.y, end.x - start.x, end.y - start.y);
+    }
 }

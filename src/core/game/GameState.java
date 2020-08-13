@@ -10,7 +10,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 import static core.Constants.GRID_SIZE;
-import static core.Constants.TIME_PER_FRAME;
+import static core.Constants.TIME_PER_TICK;
 
 public class GameState {
 
@@ -23,7 +23,6 @@ public class GameState {
     private final Map<Long, Action> unitActions;
     // PlayerId <-> build actions
     private final Map<Integer, Queue<Action>> buildActions;
-
     // PlayerId <-> resource storage
     private final Map<Integer, Integer> resources;
 
@@ -46,7 +45,7 @@ public class GameState {
     public void tick() {
         // Reload unit every tick
         for (Unit u : grid.getUnits().values()) {
-            u.reload(-TIME_PER_FRAME);
+            u.reload(-TIME_PER_TICK);
         }
 
         // Execute build actions
@@ -57,7 +56,7 @@ public class GameState {
                 if (build.isComplete()) {
                     next.poll();
                 } else {
-                    build.exec(this, TIME_PER_FRAME);
+                    build.exec(this, TIME_PER_TICK);
                 }
             }
         }
@@ -68,7 +67,7 @@ public class GameState {
             if (next.isComplete()) {
                 it.remove();
             } else {
-                next.exec(this, TIME_PER_FRAME);
+                next.exec(this, TIME_PER_TICK);
             }
         }
 
@@ -130,9 +129,9 @@ public class GameState {
     }
 
     /**
-     * Advance current game state by certain amount of time
+     * Advance current game state with given action
      */
-    public void update() {
+    public void advance(Action act) {
     }
 
     /**

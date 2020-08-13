@@ -40,6 +40,11 @@ public abstract class Entity {
         currentHP -= amount;
     }
 
+    public boolean isDamaged() {
+        return currentHP < maxHp;
+
+    }
+
     protected void loadBaseProperties(JSONObject jo) {
         this.name = (String) jo.get("name");
         this.cost = Math.toIntExact((Long) jo.get("cost"));
@@ -99,7 +104,6 @@ public abstract class Entity {
     public int getCurrentHP() {
         return currentHP;
     }
-
     public void setCurrentHP(int currentHP) {
         this.currentHP = currentHP;
     }
@@ -107,7 +111,6 @@ public abstract class Entity {
     public int getMaxHp() {
         return maxHp;
     }
-
     public void setMaxHp(int maxHp) {
         this.maxHp = maxHp;
     }
@@ -119,7 +122,6 @@ public abstract class Entity {
     public String[] getSpriteKey() {
         return spriteKey;
     }
-
     public void setSpriteKey(String[] spriteKey) {
         this.spriteKey = spriteKey;
     }

@@ -1,31 +1,40 @@
 package util;
 
-import static core.Constants.SECOND_NANO;
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class FPSCounter {
-
-    private double ticks = 0.0;
-    private double frames = 0.0;
-    private long lastTime = 0L;
+public class FPSCounter implements ActionListener {
+    private final Timer resetTimer;
+    private int current, last;
 
     public FPSCounter() {
+        resetTimer = new Timer(1000, this);
     }
 
-    public void tick() {
-        ticks++;
+    public synchronized void start() {
+        resetTimer.start();
+        current = 0;
+        last = -1;
     }
 
-    public void incFrame() {
-        frames++;
+    public synchronized void stop() {
+        resetTimer.stop();
+        current = -1;
     }
 
-    public void printResult(long current, int interval) {
-        if (current > lastTime + SECOND_NANO * interval) {
-            lastTime = System.nanoTime();
-            System.out.printf("Frames: %.2f  Ticks: %.2f\n", frames / interval, ticks / interval);
-            ticks = 0;
-            frames = 0;
-        }
+    public synchronized void frame() {
+        ++current;
+    }
+
+    @Override
+    public synchronized void actionPerformed(final ActionEvent e) {
+        last = current;
+        current = 0;
+    }
+
+    public synchronized int get() {
+        return last;
     }
 
 }

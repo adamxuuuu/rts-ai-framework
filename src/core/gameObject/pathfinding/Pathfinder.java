@@ -1,6 +1,9 @@
 package core.gameObject.pathfinding;
 
+import UI.GameView;
 import core.game.Grid;
+import core.gameObject.Unit;
+import util.Utils;
 import util.Vector2d;
 
 import java.util.*;
@@ -20,6 +23,31 @@ public class Pathfinder {
 
     public Pathfinder(Vector2d curPos) {
         this.root = new PfNode(curPos);
+    }
+
+    public static boolean move(Grid grid, Deque<PfNode> path, Vector2d gridDest, Unit unit) {
+        if (path != null) {
+            PfNode wayPoint = path.peek();
+            if (wayPoint == null) {
+                return true;
+            }
+            Vector2d wp = wayPoint.getPosition();
+
+            Vector2d diff = GameView.gridToScreen(wp).subtract(unit.getScreenPos());
+            Vector2d dv = diff.unify().mul(unit.getSpeed());
+            dv = new Vector2d(Utils.absMin(diff.x, dv.x), Utils.absMin(diff.y, dv.y));
+
+            // Move
+            grid.updateGridPos(unit, unit.getScreenPos().add(dv));
+
+            // Check if reached waypoint or destination
+            Vector2d sp = unit.getScreenPos();
+            if (sp.equals(GameView.gridToScreen(wp))) {
+                path.pop();
+                return sp.equals(GameView.gridToScreen(gridDest));
+            }
+        }
+        return false;
     }
 
     /**
@@ -52,7 +80,7 @@ public class Pathfinder {
 
             ArrayList<PfNode> neighbours = new ArrayList<>();
             for (Vector2d neigh : n.getPosition().neighborhood(1, 0, grid.size(), false)) {
-                if (!grid.accessible(neigh.x, neigh.y)) {
+                if (!grid.accessible(neigh.x, neigh.y) || grid.getBuildingAt(neigh.x, neigh.y) != null) {
                     // skip tile that can not access or has entity
                     continue;
                 }
