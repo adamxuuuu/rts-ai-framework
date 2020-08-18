@@ -1,5 +1,6 @@
-package core.gameObject;
+package core.entity;
 
+import core.Constants;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -14,20 +15,20 @@ public class Unit extends Entity {
     private int attack; // Damage output
     private int speed; // Pixels per frame
     private int range; // Attack range measured in grid distance
-
+    private int carry; // Resources carried
     private Type type;
-    private int kills;
-    private int veteranLvl;
+
     private long timeTillNextAttack;
 
-    public Unit(String name, int speed, long entityId, int agentId) {
+    private Unit(String name, int speed, long entityId, int agentId) {
         this.entityId = entityId;
         this.agentId = agentId;
         this.name = name;
         this.speed = speed;
     }
 
-    public Unit(String filename, long entityId, int agentId) {
+    public Unit(String filename, int agentId) {
+        super.create();
         //JSON parser object to parse read file
         JSONParser jsonParser = new JSONParser();
 
@@ -39,7 +40,6 @@ public class Unit extends Entity {
             e.printStackTrace();
         }
 
-        this.entityId = entityId;
         this.agentId = agentId;
         currentHP = maxHp;
         timeTillNextAttack = 0L;
@@ -61,6 +61,23 @@ public class Unit extends Entity {
         this.timeTillNextAttack += delta;
     }
 
+    public boolean canAttack() {
+        return getTimeTillNextAttack() <= 0;
+    }
+
+    public void harvest() {
+        carry = Math.min(carry + attack, Constants.WORKER_MAX_CARRY);
+        setTimeTillNextAttack(getRateOfFire() * Constants.SECOND_NANO);
+    }
+
+    public boolean full() {
+        return carry >= Constants.WORKER_MAX_CARRY;
+    }
+
+    public void dump() {
+        carry = 0;
+    }
+
     @Override
     public Entity copy() {
         Unit copy = new Unit(name, speed, entityId, agentId);
@@ -69,11 +86,16 @@ public class Unit extends Entity {
         copy.setMaxHp(maxHp);
         copy.setCurrentHP(currentHP);
         copy.setSpriteKey(spriteKey);
+        copy.setType(type);
         return copy;
     }
 
     public Type getType() {
         return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
     }
 
     public int getRange() {
@@ -88,14 +110,6 @@ public class Unit extends Entity {
         return rateOfFire;
     }
 
-    public int getKills() {
-        return kills;
-    }
-
-    public int getVeteranLvl() {
-        return veteranLvl;
-    }
-
     public int getAttack() {
         return attack;
     }
@@ -106,5 +120,9 @@ public class Unit extends Entity {
 
     public void setTimeTillNextAttack(long timeTillNextAttack) {
         this.timeTillNextAttack = timeTillNextAttack;
+    }
+
+    public int getCarry() {
+        return carry;
     }
 }

@@ -3,10 +3,10 @@ package core.game;
 import UI.GUI;
 import core.Constants;
 import core.action.Action;
-import core.gameObject.Building;
-import core.gameObject.Entity;
+import core.entity.Building;
 import player.Agent;
 import player.HumanAgent;
+import player.PlayerAction;
 
 import java.util.Iterator;
 import java.util.Random;
@@ -53,13 +53,16 @@ public class Game {
         }
 
         for (int i = 0; i < numPlayers; i++) {
-            Building base = new Building("./resources/building/base.json", Entity.nextId++, players[i].playerID());
+            Building base = new Building("./resources/building/base.json", players[i].playerID());
             base.setGridPos(BASE_LOCATION[i]);
             if (!gs.addBuilding(base)) {
                 throw new IllegalArgumentException("Map does not have a base location");
             }
+
+            gs.manageResource(players[i].playerID(), Constants.STARTING_RESOURCE);
         }
     }
+
 
     /**
      * Main game loop, Update at a fix rate (16ms).
@@ -102,8 +105,8 @@ public class Game {
             if (agent instanceof HumanAgent) {
                 continue;
             }
-            Action act = agent.act(gs);
-            gs.addAction(agent.playerID(), act);
+            PlayerAction playerAction = agent.act(gs);
+            gs.addPlayerAction(playerAction);
         }
         // Advance game state by 16ms
         gs.tick();
@@ -111,15 +114,15 @@ public class Game {
 
     private void processInput() {
         HumanAgent human = humanPlayer();
-        Action act = human.getBuildAct();
+        Action act = human.firstBuildAction();
         if (act != null) {
             if (act.isComplete()) {
-                human.poll();
+                human.removeFirstBuildAct();
             } else {
                 act.exec(gs, TIME_PER_TICK);
             }
         }
-        Iterator<Action> it = human.getUnitActs().values().iterator();
+        Iterator<Action> it = human.getUnitActions().values().iterator();
         while (it.hasNext()) {
             Action next = it.next();
             if (next.isComplete()) {

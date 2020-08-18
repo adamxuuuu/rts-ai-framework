@@ -1,4 +1,4 @@
-package core.gameObject;
+package core.entity;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -7,7 +7,7 @@ import util.Vector2d;
 public abstract class Entity {
 
     // Unique identifier of each entity
-    public static long nextId = 1000;
+    private static long nextId = 1000;
 
     /**
      * Unique ID of this entity.
@@ -36,13 +36,20 @@ public abstract class Entity {
     protected int currentHP; // Current hip point
     protected String[] spriteKey;
 
+    public void create() {
+        entityId = Entity.nextId++;
+    }
+
     public void takeDamage(int amount) {
         currentHP -= amount;
     }
 
     public boolean isDamaged() {
         return currentHP < maxHp;
+    }
 
+    public boolean died() {
+        return currentHP <= 0;
     }
 
     protected void loadBaseProperties(JSONObject jo) {

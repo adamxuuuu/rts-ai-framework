@@ -23,7 +23,7 @@ public class FPSCounter implements ActionListener {
         current = -1;
     }
 
-    public synchronized void frame() {
+    public synchronized void incFrame() {
         ++current;
     }
 

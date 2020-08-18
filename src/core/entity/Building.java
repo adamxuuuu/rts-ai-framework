@@ -1,4 +1,4 @@
-package core.gameObject;
+package core.entity;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -11,11 +11,12 @@ public class Building extends Entity {
 
     private Type type;
 
-    Building(Type type) {
+    private Building(Type type) {
         this.type = type;
     }
 
-    public Building(String filename, long entityId, int agentId) {
+    public Building(String filename, int agentId) {
+        super.create();
         //JSON parser object to parse read file
         JSONParser jsonParser = new JSONParser();
 
@@ -27,7 +28,6 @@ public class Building extends Entity {
             e.printStackTrace();
         }
 
-        this.entityId = entityId;
         this.agentId = agentId;
     }
 

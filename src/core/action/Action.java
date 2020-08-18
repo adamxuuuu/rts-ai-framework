@@ -4,7 +4,7 @@ import core.game.GameState;
 
 public abstract class Action {
 
-    public boolean isComplete = false;
+    boolean isComplete = false;
 
     /**
      * Execute this command under game state X

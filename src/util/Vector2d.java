@@ -352,7 +352,7 @@ public class Vector2d {
      * @param radius   the size of the neighborhood (radius = 1, gives a 3x3 neighborhood ).
      * @param min      the minimum value to keep it in bounds (inclusive).
      * @param max      the maximum value to keep it in bounds (exclusive).
-     * @param diagonal 8-way connectivity
+     * @param diagonal if using 8-way connectivity
      * @return A list of neighbors.
      */
     public LinkedList<Vector2d> neighborhood(int radius, int min, int max, boolean diagonal) {

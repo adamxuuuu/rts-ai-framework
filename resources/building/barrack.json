@@ -1,0 +1,10 @@
+{
+  "type": 0,
+  "name": "barrack",
+  "cost": 100,
+  "maxHp": 300,
+  "buildTime": 5,
+  "spriteKey": [
+    "scifiStructure_02.png"
+  ]
+}

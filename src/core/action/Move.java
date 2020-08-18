@@ -1,28 +1,31 @@
 package core.action;
 
+import core.entity.Unit;
+import core.entity.pathfinding.Pathfinder;
+import core.entity.pathfinding.PfNode;
 import core.game.GameState;
 import core.game.Grid;
-import core.gameObject.Unit;
-import core.gameObject.pathfinding.Pathfinder;
-import core.gameObject.pathfinding.PfNode;
 import util.Vector2d;
 
 import java.util.Deque;
 
 public class Move extends Action {
 
-    private long unitId;
-    private Vector2d gridDest;
-    private Deque<PfNode> path;
+    private final long unitId;
+    private final Vector2d gridDest;
+    private final Deque<PfNode> path;
+
+    public Move(long unitId, Vector2d gridDest, Deque<PfNode> path) {
+        this.unitId = unitId;
+        this.gridDest = gridDest;
+        this.path = path;
+    }
 
     public Move(Unit unit, Vector2d gridDest, Grid grid) {
         this.unitId = unit.getEntityId();
         this.gridDest = gridDest;
 
         path = new Pathfinder(unit.getGridPos()).pathTo(gridDest, grid);
-    }
-
-    public Move() {
     }
 
     @Override
@@ -40,7 +43,7 @@ public class Move extends Action {
 
     @Override
     public Action copy() {
-        return new Move();
+        return new Move(unitId, gridDest, path);
     }
 
     @Override

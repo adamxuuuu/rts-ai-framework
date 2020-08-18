@@ -5,7 +5,7 @@
   "range": 0,
   "cost": 50,
   "maxHp": 50,
-  "attack": 5,
+  "attack": 3,
   "buildTime": 3,
   "rateOfFire": 1,
   "spriteKey": [

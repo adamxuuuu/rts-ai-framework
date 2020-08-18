@@ -1,9 +1,10 @@
 package core.game;
 
 import core.action.Action;
-import core.action.Build;
-import core.gameObject.Building;
-import core.gameObject.Unit;
+import core.entity.Building;
+import core.entity.Entity;
+import core.entity.Unit;
+import player.PlayerAction;
 import util.Vector2d;
 
 import java.util.*;
@@ -20,11 +21,11 @@ public class GameState {
     private Grid grid;
 
     // UnitId <-> unit actions
-    private final Map<Long, Action> unitActions;
+    private Map<Long, Action> unitActions;
     // PlayerId <-> build actions
-    private final Map<Integer, Queue<Action>> buildActions;
+    private Map<Integer, Queue<Action>> buildActions;
     // PlayerId <-> resource storage
-    private final Map<Integer, Integer> resources;
+    private Map<Integer, Integer> resources;
 
     GameState() {
         grid = new Grid(GRID_SIZE);
@@ -43,14 +44,20 @@ public class GameState {
     }
 
     public void tick() {
+        for (Iterator<Entity> it = grid.entities().iterator(); it.hasNext(); ) {
+            Entity e = it.next();
+            if (e.died()) {
+                it.remove();
+                grid.removeEntity(e);
+            }
+        }
         // Reload unit every tick
-        for (Unit u : grid.getUnits().values()) {
+        for (Unit u : grid.unitMap().values()) {
             u.reload(-TIME_PER_TICK);
         }
 
         // Execute build actions
-        for (Iterator<Queue<Action>> it = buildActions.values().iterator(); it.hasNext(); ) {
-            Queue<Action> next = it.next();
+        for (Queue<Action> next : buildActions.values()) {
             Action build = next.peek();
             if (build != null) {
                 if (build.isComplete()) {
@@ -83,7 +90,25 @@ public class GameState {
 
         copy.grid = this.grid.copy();
 
+        copy.unitActions = new HashMap<>();
+        copy.buildActions = new HashMap<>();
+        copy.resources = new HashMap<>();
+        for (Map.Entry<Integer, Integer> entry : resources.entrySet()) {
+            copy.resources.put(entry.getKey(), entry.getValue());
+        }
+
         return copy;
+    }
+
+    public void manageResource(int playerId, int amount) {
+        resources.merge(playerId, amount, Integer::sum);
+    }
+
+    public boolean enoughResource(int playerId, int amount) {
+        if (amount == 0) {
+            return false;
+        }
+        return resources.getOrDefault(playerId, 0) >= amount;
     }
 
     /**
@@ -101,37 +126,34 @@ public class GameState {
     /**
      * Only entry point for adding a unit
      *
-     * @param u        {@link Unit} to add
-     * @param fromBase if the unit is produced from base, calculate a nearby available position
+     * @param u         {@link Unit} to add
+     * @param sourcePos location where the unit build from
      */
-    public void addUnit(Unit u, boolean fromBase) {
+    public void addUnit(Unit u, Vector2d sourcePos) {
         if (u == null) {
             return;
         }
-        if (fromBase) {
-            Vector2d facPos = grid.getBuilding(u.getAgentId(), Building.Type.BASE).getGridPos();
-            Vector2d spawn = grid.findNearby(facPos, 5);
-            if (spawn == null) {
-                // TODO give indication to player
-                return;
-            }
-            grid.updateScreenPos(u, spawn);
+        Vector2d spawn = grid.findFirstNearby(sourcePos, 5);
+        if (spawn == null) {
+            // TODO give indication to player
+            return;
         }
+        grid.updateScreenPos(u, spawn);
         grid.addUnit(u);
     }
 
     public Set<Long> allUnitIds() {
-        return grid.getUnits().keySet();
+        return grid.unitMap().keySet();
     }
 
     public Unit[] allUnits() {
-        return grid.getUnits().values().toArray(Unit[]::new);
+        return grid.unitMap().values().toArray(Unit[]::new);
     }
 
     /**
-     * Advance current game state with given action
+     * Advance current game state with given actions
      */
-    public void advance(Action act) {
+    public void advance(List<Action> acts) {
     }
 
     /**
@@ -141,18 +163,22 @@ public class GameState {
         return null;
     }
 
-    public synchronized void addAction(int playerId, Action act) {
-        if (act instanceof Build) {
-            Queue<Action> actList = buildActions.get(playerId);
-            if (actList == null) {
-                actList = new LinkedList<>();
-                actList.add(act);
-                buildActions.put(playerId, actList);
-            } else {
-                actList.add(act);
-            }
+    public synchronized void addPlayerAction(PlayerAction pa) {
+        int playerId = pa.playerId();
+        Queue<Action> buildActs = buildActions.get(playerId);
+        if (buildActs == null) {
+            buildActions.put(playerId, new LinkedList<>(pa.buildActions()));
         } else {
-            unitActions.put(act.actorId(), act);
+            buildActs.addAll(pa.buildActions());
         }
+
+        // Handle unit actions
+        for (Map.Entry<Long, Action> entry : pa.unitActions().entrySet()) {
+            unitActions.put(entry.getKey(), entry.getValue());
+        }
+    }
+
+    public int getResource(int playerId) {
+        return resources.getOrDefault(playerId, 0);
     }
 }

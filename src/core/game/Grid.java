@@ -2,19 +2,17 @@ package core.game;
 
 import UI.GameView;
 import core.Constants;
-import core.gameObject.Building;
-import core.gameObject.Entity;
-import core.gameObject.Resource;
-import core.gameObject.Unit;
+import core.entity.Building;
+import core.entity.Entity;
+import core.entity.Resource;
+import core.entity.Unit;
 import util.Utils;
 import util.Vector2d;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class Grid {
+
 
     /**
      * Terrain type
@@ -30,7 +28,6 @@ public class Grid {
      * Height value for each cell in the grid
      */
     private float[][] heightMap;
-
     /**
      * Terrain type calculated based on height value
      */
@@ -67,12 +64,28 @@ public class Grid {
         initResources();
     }
 
+    public Collection<Entity> entities() {
+        return allEntities.values();
+    }
+
     public Entity getEntity(long id) {
         return allEntities.get(id);
     }
 
-    public Resource getResourcesAt(int x, int y) {
+    public Resource getResourceAt(int x, int y) {
         return resources[x][y];
+    }
+
+    public Resource findNearestResource(Vector2d p) {
+        for (int radius = 1; radius < 5; radius++) {
+            for (Vector2d pos : p.neighborhood(radius, 0, size, true)) {
+                Resource res = getResourceAt(pos.x, pos.y);
+                if (res != null) {
+                    return res;
+                }
+            }
+        }
+        return null;
     }
 
     public Entity getEnemyAt(int playerID, Vector2d gp) {
@@ -105,17 +118,28 @@ public class Grid {
      */
     public void removeEntity(Entity e) {
         long id = e.getEntityId();
+        Vector2d gp = e.getGridPos();
         if (e instanceof Unit) {
             units.remove(id);
         } else if (e instanceof Building) {
-            Vector2d gp = e.getGridPos();
             buildings[gp.x][gp.y] = null;
+        } else if (e instanceof Resource) {
+            resources[gp.x][gp.y] = null;
         }
         allEntities.remove(id);
     }
 
+    public LinkedList<Vector2d> findAllNearby(Vector2d gp, int maxRange) {
+        LinkedList<Vector2d> res = new LinkedList<>();
+        for (Vector2d pos : gp.neighborhood(maxRange, 0, size, true)) {
+            if (accessible(pos.x, pos.y) && !occupied(pos.x, pos.y)) {
+                res.push(pos);
+            }
+        }
+        return res;
+    }
 
-    public Vector2d findNearby(Vector2d gp, int maxRange) {
+    public Vector2d findFirstNearby(Vector2d gp, int maxRange) {
         for (int radius = 1; radius < maxRange; radius++) {
             for (Vector2d pos : gp.neighborhood(radius, 0, size, true)) {
                 if (accessible(pos.x, pos.y) && !occupied(pos.x, pos.y)) {
@@ -142,15 +166,15 @@ public class Grid {
     }
 
     /**
-     * @param agentId owner
-     * @param bt      {@link Building.Type}
+     * @param playerId owner
+     * @param bt       {@link Building.Type}
      * @return the {@link Building}
      */
-    public Building getBuilding(long agentId, Building.Type bt) {
+    public Building getBuilding(long playerId, Building.Type bt) {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 Building b = getBuildingAt(i, j);
-                if (b != null && b.getType() == bt && b.getAgentId() == agentId) {
+                if (b != null && b.getType() == bt && b.getAgentId() == playerId) {
                     return b;
                 }
             }
@@ -218,11 +242,14 @@ public class Grid {
 
     private void initResources() {
         for (Vector2d loc : Constants.RESOURCE_LOCATION) {
-            resources[loc.x][loc.y] = new Resource(Resource.Type.RICH);
+            Resource resource = new Resource(Resource.Type.RICH);
+            resource.setGridPos(loc);
+            resources[loc.x][loc.y] = resource;
+            allEntities.put(resource.getEntityId(), resource);
         }
     }
 
-    public Map<Long, Unit> getUnits() {
+    public Map<Long, Unit> unitMap() {
         return units;
     }
 

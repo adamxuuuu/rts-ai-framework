@@ -1,28 +1,45 @@
 package core.action;
 
 import core.Constants;
+import core.entity.Building;
+import core.entity.Entity;
+import core.entity.Unit;
 import core.game.GameState;
-import core.gameObject.Building;
-import core.gameObject.Entity;
-import core.gameObject.Unit;
 
 public class Build extends Action {
 
     private final Entity entity;
+
+    private int playerId;
     private long buildTime;
+    private int cost;
 
     public Build(Entity entity) {
         this.entity = entity;
-        this.buildTime = entity.getBuildTime() * Constants.SECOND_NANO;
+
+        playerId = entity.getAgentId();
+        buildTime = entity.getBuildTime() * Constants.SECOND_NANO;
+        cost = entity.getCost();
     }
 
-    public Build(Entity entity, long buildTime) {
+    private Build(Entity entity, long buildTime) {
         this.entity = entity;
         this.buildTime = buildTime;
     }
 
     @Override
     public void exec(GameState gs, double elapsed) {
+        // Cost resource first time execute
+        if (!gs.enoughResource(playerId, entity.getCost())) {
+            isComplete = true;
+            return;
+        }
+
+        if (cost != 0) {
+            gs.manageResource(playerId, -cost);
+            cost = 0;
+        }
+
         buildTime -= elapsed;
         if (buildTime > 0) {
 //            System.out.println("building...");
@@ -30,7 +47,9 @@ public class Build extends Action {
         }
 
         if (entity instanceof Unit) {
-            gs.addUnit((Unit) entity, true);
+            // TODO: add build source
+            Building source = gs.getGrid().getBuilding(entity.getAgentId(), Building.Type.BASE);
+            gs.addUnit((Unit) entity, source.getGridPos());
         } else if (entity instanceof Building) {
             gs.addBuilding((Building) entity);
         }

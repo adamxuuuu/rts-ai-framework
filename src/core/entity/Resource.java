@@ -1,4 +1,4 @@
-package core.gameObject;
+package core.entity;
 
 import core.Constants;
 
@@ -9,6 +9,7 @@ public class Resource extends Entity {
     private final Type type;
 
     public Resource(Type type) {
+        super.create();
         this.type = type;
         switch (type) {
             case NORMAL -> {
@@ -20,9 +21,10 @@ public class Resource extends Entity {
                 spriteKey = new String[]{"scifiEnvironment_10.png"};
             }
         }
+        currentHP = maxHp;
     }
 
-    Resource(Type type, int capacity) {
+    private Resource(Type type, int capacity) {
         this.type = type;
         this.maxHp = capacity;
     }

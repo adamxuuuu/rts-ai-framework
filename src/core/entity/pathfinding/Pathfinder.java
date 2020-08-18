@@ -1,8 +1,8 @@
-package core.gameObject.pathfinding;
+package core.entity.pathfinding;
 
 import UI.GameView;
+import core.entity.Unit;
 import core.game.Grid;
-import core.gameObject.Unit;
 import util.Utils;
 import util.Vector2d;
 
@@ -25,6 +25,15 @@ public class Pathfinder {
         this.root = new PfNode(curPos);
     }
 
+    /**
+     * Move a unit
+     *
+     * @param grid     where the movement happen
+     * @param path     to follow
+     * @param gridDest to reach
+     * @param unit     to move
+     * @return if the unit arrived at destination
+     */
     public static boolean move(Grid grid, Deque<PfNode> path, Vector2d gridDest, Unit unit) {
         if (path != null) {
             PfNode wayPoint = path.peek();

@@ -1,12 +1,12 @@
 package UI;
 
+import core.entity.Building;
+import core.entity.Entity;
+import core.entity.Resource;
+import core.entity.Unit;
 import core.game.Game;
 import core.game.GameState;
 import core.game.Grid;
-import core.gameObject.Building;
-import core.gameObject.Entity;
-import core.gameObject.Resource;
-import core.gameObject.Unit;
 import util.FPSCounter;
 import util.Utils;
 import util.Vector2d;
@@ -27,7 +27,7 @@ public class GameView extends JComponent {
     // Game
     private final Game game;
     private GameState gs;
-    private Grid grid;
+    private final Grid grid;
 
     // Setting
     private boolean showGrid;
@@ -39,18 +39,17 @@ public class GameView extends JComponent {
         this.game = game;
         this.grid = game.getGrid().copy();
         size = grid.size();
+
         this.fpsCounter = new FPSCounter();
         fpsCounter.start();
-
-    }
-
-    void render(GameState gs) {
-        this.gs = gs;
-        this.grid = gs.getGrid();
     }
 
     public Dimension getPreferredSize() {
         return dimension;
+    }
+
+    void render(GameState gs) {
+        this.gs = gs;
     }
 
     public void paintComponent(Graphics g) {
@@ -58,11 +57,7 @@ public class GameView extends JComponent {
         paint(g2d);
 
         Toolkit.getDefaultToolkit().sync();
-
-        // Count frames
-        fpsCounter.frame(); //added line (step 4).
-        g.setFont(new Font("Arial", Font.BOLD, 25));
-        g.drawString("FPS: " + fpsCounter.get(), 5, dimension.height); //added line (step 5).
+        g.dispose();
     }
 
     private void paint(Graphics2D g) {
@@ -75,6 +70,18 @@ public class GameView extends JComponent {
 
         drawGrid(g);
         drawEntities(g);
+        printInfo(g);
+    }
+
+    private void printInfo(Graphics2D g) {
+        // Show resources
+        int resource = gs.getResource(game.humanPlayer().playerID());
+        g.setFont(new Font("Arial", Font.BOLD, 25));
+        g.drawString("Resource: " + resource, 0, dimension.height - CELL_SIZE); //added line (step 5).
+        // Count frames
+        fpsCounter.incFrame(); //added line (step 4).
+        g.setFont(new Font("Arial", Font.BOLD, 25));
+        g.drawString("FPS: " + fpsCounter.get(), 0, dimension.height); //added line (step 5).
     }
 
     private void drawGrid(Graphics2D g) {
@@ -84,20 +91,16 @@ public class GameView extends JComponent {
         BufferedImage tile;
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
-//                g.setColor(Color.BLACK);
-//                g.drawString(i + ":" + j, j * CELL_SIZE, i * CELL_SIZE + CELL_SIZE / 2);
                 Grid.TerrainType tt = grid.getTerrainAt(i, j);
                 switch (tt) {
                     case WATER -> {
                         tile = getSprite("scifiTile_13.png");
-//                        g.setColor(Color.CYAN);
-//                        g.fillRect(j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                     }
-                    case LAND -> tile = getSprite("scifiTile_41.png"); //g.setColor(Color.WHITE);
+                    case LAND -> {
+                        tile = getSprite("scifiTile_41.png");
+                    }
                     case MOUNTAIN -> {
                         tile = getSprite("scifiTile_28.png");
-//                        g.setColor(Color.DARK_GRAY);
-//                        g.fillRect(j * CELL_SIZE, i * CELL_SIZE, CELL_SIZE, CELL_SIZE);
                     }
                     default -> throw new IllegalArgumentException("New terrain type not implemented");
                 }
@@ -111,20 +114,20 @@ public class GameView extends JComponent {
     }
 
     private void drawEntities(Graphics2D g) {
-        // Buildings and resource
+        // Buildings and resource (static)
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 Building b = grid.getBuildingAt(i, j);
                 if (b != null) {
-                    drawImage(getSprite(b), i * CELL_SIZE, j * CELL_SIZE, g);
+                    drawImage(getSprite(b), j * CELL_SIZE, i * CELL_SIZE, g);
                     int barWidth = (int) ((double) b.getCurrentHP() / b.getMaxHp() * CELL_SIZE);
                     g.setColor(Color.GREEN);
-                    drawHealthBar(g, i * CELL_SIZE + CELL_SIZE / 7, j * CELL_SIZE + CELL_SIZE / 7, barWidth);
+                    drawHealthBar(g, j * CELL_SIZE, i * CELL_SIZE, barWidth);
                     continue;
                 }
-                Resource r = grid.getResourcesAt(i, j);
+                Resource r = grid.getResourceAt(i, j);
                 if (r != null) {
-                    drawImage(getSprite(r), i * CELL_SIZE, j * CELL_SIZE, g);
+                    drawImage(getSprite(r), j * CELL_SIZE, i * CELL_SIZE, g);
                 }
             }
         }
@@ -138,7 +141,7 @@ public class GameView extends JComponent {
             // Health bar
             if (u.isDamaged()) {
                 g.setColor(Color.GREEN);
-                int barWidth = (int) ((double) u.getCurrentHP() / u.getMaxHp() * CELL_SIZE / 3);
+                int barWidth = (int) ((double) u.getCurrentHP() / u.getMaxHp() * CELL_SIZE);
                 drawHealthBar(g, sp.x, sp.y, barWidth);
             }
 
@@ -148,7 +151,7 @@ public class GameView extends JComponent {
                 scales = new float[]{1f, 1f, 1f, 0.8f};
             }
             RescaleOp rop = new RescaleOp(scales, offsets, null);
-            BufferedImage resized = Utils.scaleDown(bi, (double) (CELL_SIZE * CELL_SIZE) / (bi.getHeight() * bi.getWidth()));
+            BufferedImage resized = Utils.scaleDown(bi, (double) (CELL_SIZE * CELL_SIZE) / (bi.getWidth()));
             g.drawImage(resized, rop, sp.x - resized.getWidth() / 2, sp.y - resized.getHeight() / 2);
         }
     }
@@ -171,7 +174,7 @@ public class GameView extends JComponent {
     }
 
     private void drawHealthBar(Graphics2D g, int x, int y, int barWidth) {
-        g.fillRect(x - CELL_SIZE / 6, (int) (y - CELL_SIZE / 2.5), barWidth, CELL_SIZE / 10);
+        g.fillRect(x, (int) (y - CELL_SIZE / 2.5), barWidth, CELL_SIZE / 10);
     }
 
     /**
@@ -205,7 +208,4 @@ public class GameView extends JComponent {
         showGrid = !showGrid;
     }
 
-    void drawSelectionBox(Graphics2D g, Point start, Point end) {
-        g.drawRect(start.x, start.y, end.x - start.x, end.y - start.y);
-    }
 }

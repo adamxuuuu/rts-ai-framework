@@ -1,4 +1,4 @@
-package core.gameObject.pathfinding;
+package core.entity.pathfinding;
 
 import util.Vector2d;
 

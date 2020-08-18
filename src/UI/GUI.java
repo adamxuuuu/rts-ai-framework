@@ -1,13 +1,13 @@
 package UI;
 
-import core.action.Attack;
-import core.action.Build;
-import core.action.Move;
+import core.action.Action;
+import core.action.*;
+import core.entity.Entity;
+import core.entity.Resource;
+import core.entity.Unit;
 import core.game.Game;
 import core.game.GameState;
 import core.game.Grid;
-import core.gameObject.Entity;
-import core.gameObject.Unit;
 import player.HumanAgent;
 import util.Vector2d;
 import util.WindowInput;
@@ -19,6 +19,7 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Random;
 
 import static core.Constants.*;
@@ -35,8 +36,8 @@ public class GUI extends JFrame {
     private final InfoView infoView;
 
     private final double screenDiagonal;
+    private final int scale = 1;
     private final Random rnd = new Random();
-    final int scale = 1;
 
     // Controller
     private final HumanAgent human;
@@ -63,8 +64,7 @@ public class GUI extends JFrame {
 
         // Settings
         GUI_GAME_VIEW_SIZE = (int) (0.46 * screenDiagonal * scale);
-        CELL_SIZE = GUI_GAME_VIEW_SIZE / game.getGrid().size() * scale;
-        GUI_SIDE_PANEL_WIDTH = (int) (0.2 * screenDiagonal * scale);
+        GUI_SIDE_PANEL_WIDTH = (int) (0.1 * screenDiagonal * scale);
         INFO_PANEL_HEIGHT = (int) (0.4 * screenDiagonal * scale);
 
         this.game = game;
@@ -132,18 +132,34 @@ public class GUI extends JFrame {
                     // Interact
                 } else if (e.getButton() == MouseEvent.BUTTON3) {
                     if (!isValidPos(gp.x, gp.y) || !grid.accessible(gp.x, gp.y)) {
+                        // TODO invalid mouse location
                         return;
                     }
 
+                    Action toExecute;
                     Entity enemy = grid.getEnemyAt(human.playerID(), gp);
                     if (enemy == null) {
+                        LinkedList<Vector2d> allocations = grid.findAllNearby(gp, (int) Math.ceil((Math.sqrt(selected.size()) - 1)));
+                        allocations.push(gp);
                         for (long uId : selected) {
-                            // Add a move action to the human player's action map
-                            human.addUnitAct(uId, new Move(grid.getUnit(uId), gp, grid));
+                            Resource res = grid.getResourceAt(gp.x, gp.y);
+                            Unit u = grid.getUnit(uId);
+                            if (u == null) {
+                                return;
+                            }
+                            if (u.getType().equals(Unit.Type.WORKER) && res != null) {
+                                // Add a harvest action to the human player's action map
+                                toExecute = new Harvest(uId, res.getEntityId());
+                            } else {
+                                // Add a move action to the human player's action map
+                                toExecute = new Move(grid.getUnit(uId), allocations.pop(), grid);
+                            }
+                            human.addUnitAction(uId, toExecute);
                         }
                     } else {
                         for (long uId : selected) {
-                            human.addUnitAct(uId, new Attack(uId, enemy.getEntityId()));
+                            // Add a attack action to the human player's action map
+                            human.addUnitAction(uId, new Attack(uId, enemy.getEntityId()));
                         }
                     }
                 }
@@ -195,13 +211,11 @@ public class GUI extends JFrame {
         GridBagConstraints c = new GridBagConstraints();
         c.anchor = GridBagConstraints.SOUTH;
         c.weighty = 0;
-        c.gridy = 0;
-        c.gridx = 0;
-
 
         File folder = new File("./resources/unit");
         File[] listOfFiles = folder.listFiles();
 
+//      Buttons for building units and buildings
         JPanel unitButtons = new JPanel();
         for (File file : listOfFiles != null ? listOfFiles : new File[0]) {
             if (file.isFile()) {
@@ -209,8 +223,8 @@ public class GUI extends JFrame {
                 JButton buildUnit = new JButton(filename.substring(0, filename.lastIndexOf('.')));
 
                 buildUnit.addActionListener(e -> {
-                    Unit unit = new Unit(file.getPath(), Entity.nextId++, human.playerID());
-                    human.addBuildAct(new Build(unit));
+                    Unit unit = new Unit(file.getPath(), human.playerID());
+                    human.addBuildAction(new Build(unit));
                 });
 
                 unitButtons.add(buildUnit);
@@ -218,9 +232,8 @@ public class GUI extends JFrame {
             }
         }
 
-
-//        c.gridy++;
-//        sidePanel.add(infoView, c);
+        c.gridy++;
+        sidePanel.add(infoView, c);
 
         return sidePanel;
     }
@@ -233,7 +246,9 @@ public class GUI extends JFrame {
     public void render(GameState gs) {
         this.gs = gs;
         this.grid = gs.getGrid();
+
         gameView.render(gs);
+        infoView.render(gs);
 
         repaint();
     }

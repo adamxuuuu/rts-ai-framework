@@ -1,12 +1,12 @@
 package core.action;
 
 import core.Constants;
+import core.entity.Entity;
+import core.entity.Unit;
+import core.entity.pathfinding.Pathfinder;
+import core.entity.pathfinding.PfNode;
 import core.game.GameState;
 import core.game.Grid;
-import core.gameObject.Entity;
-import core.gameObject.Unit;
-import core.gameObject.pathfinding.Pathfinder;
-import core.gameObject.pathfinding.PfNode;
 import util.Utils;
 import util.Vector2d;
 
@@ -18,8 +18,6 @@ public class Attack extends Action {
 
     private final long attackerId;
     private final long targetId;
-
-    private PfNode wayPoint;
 
     public Attack(long attackerId, long targetId) {
         this.attackerId = attackerId;
@@ -43,22 +41,16 @@ public class Attack extends Action {
         // Use euclidean distance to check if in range
         boolean inRange = Vector2d.euclideanDistance(attackPos, targetPos) < range;
         if (inRange) {
-            if (attacker.getTimeTillNextAttack() > 0) {
+            if (!attacker.canAttack()) {
                 return;
             }
             attacker.setTimeTillNextAttack(attacker.getRateOfFire() * Constants.SECOND_NANO);
-
             target.takeDamage(attacker.getAttack());
-            // Kill the target
-            if (target.getCurrentHP() <= 0) {
-                grid.removeEntity(target);
-            }
         } else {
             LinkedList<Vector2d> temp = targetPos.neighborhood(range, 0, grid.size(), false);
             Vector2d dest = Utils.shortestPos(attackPos, temp, grid);
 
-            Pathfinder pf = new Pathfinder(attackPos);
-            Deque<PfNode> path = pf.pathTo(dest, grid);
+            Deque<PfNode> path = new Pathfinder(attackPos).pathTo(dest, grid);
 
             isComplete = Pathfinder.move(grid, path, dest, attacker);
         }

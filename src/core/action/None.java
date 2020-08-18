@@ -18,7 +18,7 @@ public class None extends Action {
 
     @Override
     public long actorId() {
-        return 0;
+        return -1;
     }
 
     @Override
