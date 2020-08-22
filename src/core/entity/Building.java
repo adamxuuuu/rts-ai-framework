@@ -1,9 +1,6 @@
 package core.entity;
 
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-
-import java.io.FileReader;
 
 public class Building extends Entity {
 
@@ -11,27 +8,16 @@ public class Building extends Entity {
 
     private Type type;
 
+    public Building(String filename) {
+        loadFromJson(filename);
+    }
+
     private Building(Type type) {
         this.type = type;
     }
 
-    public Building(String filename, int agentId) {
-        super.create();
-        //JSON parser object to parse read file
-        JSONParser jsonParser = new JSONParser();
-
-        try (FileReader reader = new FileReader(filename)) {
-            //Read JSON file
-            Object obj = jsonParser.parse(reader);
-            load((JSONObject) obj);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        this.agentId = agentId;
-    }
-
-    private void load(JSONObject jo) {
+    @Override
+    protected void load(JSONObject jo) {
         super.loadBaseProperties(jo);
         this.type = Type.values()[Math.toIntExact((Long) jo.get("type"))];
     }
@@ -42,8 +28,9 @@ public class Building extends Entity {
         copy.setEntityId(entityId);
         copy.setAgentId(agentId);
         copy.setGridPos(gridPos);
-        copy.setScreenPos(screenPos);
         copy.setSpriteKey(spriteKey);
+        copy.setCurrentHP(currentHP);
+        copy.setMaxHp(maxHp);
         return copy;
     }
 

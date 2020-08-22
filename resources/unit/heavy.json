@@ -3,9 +3,9 @@
   "name": "heavy",
   "speed": 1,
   "range": 5,
-  "cost": 90,
-  "maxHp": 90,
-  "attack": 5,
+  "cost": 60,
+  "maxHp": 50,
+  "attack": 10,
   "buildTime": 3,
   "rateOfFire": 3,
   "spriteKey": [

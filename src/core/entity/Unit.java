@@ -1,10 +1,14 @@
 package core.entity;
 
 import core.Constants;
+import core.action.*;
+import core.game.GameState;
+import core.game.Grid;
 import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
+import util.Vector2d;
 
-import java.io.FileReader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Unit extends Entity {
 
@@ -17,35 +21,25 @@ public class Unit extends Entity {
     private int range; // Attack range measured in grid distance
     private int carry; // Resources carried
     private Type type;
-
     private long timeTillNextAttack;
 
-    private Unit(String name, int speed, long entityId, int agentId) {
-        this.entityId = entityId;
-        this.agentId = agentId;
-        this.name = name;
+    // Template constructor
+    public Unit(String filename) {
+        loadFromJson(filename);
+    }
+
+    public Unit(int rateOfFire, int attack, int speed, int range, int carry, Type type, long timeTillNextAttack) {
+        this.rateOfFire = rateOfFire;
+        this.attack = attack;
         this.speed = speed;
+        this.range = range;
+        this.carry = carry;
+        this.type = type;
+        this.timeTillNextAttack = timeTillNextAttack;
     }
 
-    public Unit(String filename, int agentId) {
-        super.create();
-        //JSON parser object to parse read file
-        JSONParser jsonParser = new JSONParser();
-
-        try (FileReader reader = new FileReader(filename)) {
-            //Read JSON file
-            Object obj = jsonParser.parse(reader);
-            load((JSONObject) obj);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        this.agentId = agentId;
-        currentHP = maxHp;
-        timeTillNextAttack = 0L;
-    }
-
-    private void load(JSONObject jo) {
+    @Override
+    protected void load(JSONObject jo) {
         super.loadBaseProperties(jo);
         this.type = Type.values()[Math.toIntExact((Long) jo.get("type"))];
         this.range = Math.toIntExact((Long) jo.get("range"));
@@ -54,11 +48,47 @@ public class Unit extends Entity {
         this.rateOfFire = Math.toIntExact((Long) jo.get("rateOfFire"));
     }
 
-    public void reload(double delta) {
+    /**
+     * Calculate all action this unit can perform given a game state
+     *
+     * @param gs game state
+     * @return A list of possible actions
+     */
+    public List<Action> calculateActions(GameState gs) {
+        ArrayList<Action> acts = new ArrayList<>();
+        if (gs == null) {
+            return acts;
+        }
+
+        Grid grid = gs.getGrid();
+        // Move actions
+        for (Vector2d pos : grid.findAllNearby(gridPos, 5)) {
+            acts.add(new Move(this, pos, grid));
+        }
+
+        // Attack and Harvest actions
+        if (this.type == Type.WORKER) {
+            Resource res = grid.findNearestResource(gridPos);
+            if (res != null) {
+                acts.add(new Harvest(entityId, res.entityId));
+            }
+        } else {
+            for (Entity enemy : grid.getEnemyInRange(this)) {
+                acts.add(new Attack(this.entityId, enemy.entityId));
+            }
+        }
+
+        // Idle
+        acts.add(new None());
+
+        return acts;
+    }
+
+    public void reload(double elapsed) {
         if (timeTillNextAttack <= 0) {
             return;
         }
-        this.timeTillNextAttack += delta;
+        this.timeTillNextAttack -= elapsed;
     }
 
     public boolean canAttack() {
@@ -70,7 +100,7 @@ public class Unit extends Entity {
         setTimeTillNextAttack(getRateOfFire() * Constants.SECOND_NANO);
     }
 
-    public boolean full() {
+    public boolean isFull() {
         return carry >= Constants.WORKER_MAX_CARRY;
     }
 
@@ -80,13 +110,8 @@ public class Unit extends Entity {
 
     @Override
     public Entity copy() {
-        Unit copy = new Unit(name, speed, entityId, agentId);
-        copy.setGridPos(gridPos);
-        copy.setScreenPos(screenPos);
-        copy.setMaxHp(maxHp);
-        copy.setCurrentHP(currentHP);
-        copy.setSpriteKey(spriteKey);
-        copy.setType(type);
+        Unit copy = new Unit(rateOfFire, attack, speed, range, carry, type, timeTillNextAttack);
+        super.copy(copy);
         return copy;
     }
 

@@ -1,10 +1,10 @@
 {
   "type": 0,
   "name": "medium",
-  "speed": 2,
-  "range": 4,
+  "speed": 4,
+  "range": 3,
   "cost": 40,
-  "maxHp": 50,
+  "maxHp": 30,
   "attack": 3,
   "buildTime": 2,
   "rateOfFire": 2,

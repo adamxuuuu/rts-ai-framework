@@ -21,4 +21,8 @@ public abstract class Action {
         return isComplete;
     }
 
+    public String toString() {
+        return getClass().getSimpleName();
+    }
+
 }

@@ -15,22 +15,22 @@ import java.util.LinkedList;
 
 public class Harvest extends Action {
 
-    private final long harvesterId;
+    private final long workerId;
     private long resourceId;
 
-    public Harvest(long harvesterId) {
-        this.harvesterId = harvesterId;
+    public Harvest(long workerId, long resourceId) {
+        this.workerId = workerId;
+        this.resourceId = resourceId;
     }
 
-    public Harvest(long harvesterId, long resourceId) {
-        this.harvesterId = harvesterId;
-        this.resourceId = resourceId;
+    private Harvest(long workerId) {
+        this.workerId = workerId;
     }
 
     @Override
     public void exec(GameState gs, double elapsed) {
         Grid grid = gs.getGrid();
-        Unit harvester = grid.getUnit(harvesterId);
+        Unit harvester = grid.getUnit(workerId);
 
         if (harvester == null) {
             isComplete = true;
@@ -40,8 +40,8 @@ public class Harvest extends Action {
         Pathfinder pf = new Pathfinder(harvester.getGridPos());
         Deque<PfNode> path;
 
-        if (harvester.full()) {
-            // Return to base
+        // Return to base
+        if (harvester.isFull()) {
             int playerId = harvester.getAgentId();
             Vector2d basePos = grid.getBuilding(playerId, Building.Type.BASE).getGridPos();
             LinkedList<Vector2d> temp = basePos.neighborhood(1, 0, grid.size(), false);
@@ -50,13 +50,14 @@ public class Harvest extends Action {
             path = pf.pathTo(dest, grid);
             boolean atBase = Pathfinder.move(grid, path, dest, harvester);
             if (atBase) {
-                gs.manageResource(playerId, harvester.getCarry());
+                gs.handleResource(playerId, harvester.getCarry());
                 harvester.dump();
             } else {
                 return;
             }
         }
 
+        // Find resource
         Resource resource = (Resource) grid.getEntity(resourceId);
         if (resource == null || resource.getCurrentHP() == 0) {
             // If current resource is depleted find nearest
@@ -87,11 +88,11 @@ public class Harvest extends Action {
 
     @Override
     public Action copy() {
-        return new Harvest(harvesterId);
+        return new Harvest(workerId);
     }
 
     @Override
     public long actorId() {
-        return harvesterId;
+        return workerId;
     }
 }

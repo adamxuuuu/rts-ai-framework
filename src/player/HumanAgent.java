@@ -1,11 +1,17 @@
 package player;
 
+import core.action.Action;
 import core.game.GameState;
+
+import java.util.Map;
 
 public class HumanAgent extends Agent {
 
+    private final PlayerAction playerAction;
+
     public HumanAgent() {
         super(0);
+        playerAction = new PlayerAction(playerId);
     }
 
     @Override
@@ -13,8 +19,29 @@ public class HumanAgent extends Agent {
         return playerAction;
     }
 
+    @Override
     public HumanAgent copy() {
         return new HumanAgent();
+    }
+
+    public void addUnitAction(Action action) {
+        playerAction.addUnitAction(action.actorId(), action);
+    }
+
+    public void addBuildAction(Action candidate) {
+        playerAction.addBuildAction(candidate);
+    }
+
+    public Map<Long, Action> getUnitActions() {
+        return playerAction.unitActions();
+    }
+
+    public Action firstBuildAction() {
+        return playerAction.buildActions().peek();
+    }
+
+    public Action removeFirstBuildAct() {
+        return playerAction.buildActions().poll();
     }
 
 }

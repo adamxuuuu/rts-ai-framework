@@ -2,7 +2,9 @@ import UI.GUI;
 import core.game.Game;
 import player.Agent;
 import player.HumanAgent;
-import player.RandomAgent;
+import player.baseline.DoNothingAgent;
+import player.baseline.RandomAgent;
+import player.baseline.RandomBiasedAgent;
 import util.WindowInput;
 
 /**
@@ -14,6 +16,7 @@ public class Start {
         DONOTHING,
         HUMAN,
         RANDOM,
+        RANDOM_BIASED,
         OSLA,
         MC,
         SIMPLE,
@@ -27,15 +30,14 @@ public class Start {
      * @return the player corresponding to type
      */
     private static Agent getAgent(PlayerType playerType) {
+        Agent player = null;
         switch (playerType) {
-            case HUMAN -> {
-                return new HumanAgent();
-            }
-            case RANDOM -> {
-                return new RandomAgent(System.currentTimeMillis());
-            }
+            case HUMAN -> player = new HumanAgent();
+            case RANDOM -> player = new RandomAgent(System.currentTimeMillis());
+            case DONOTHING -> player = new DoNothingAgent();
+            case RANDOM_BIASED -> player = new RandomBiasedAgent(System.currentTimeMillis());
         }
-        return null;
+        return player;
     }
 
     /**
@@ -50,7 +52,7 @@ public class Start {
         for (int i = 0; i < playerTypes.length; ++i) {
             Agent ag = getAgent(playerTypes[i]);
             if (ag != null) {
-                ag.setPlayerID(i);
+                ag.setPlayerId(i);
                 players[i] = ag;
             }
         }
@@ -73,14 +75,17 @@ public class Start {
     private static void runGame(Game g) {
         WindowInput wi = new WindowInput();
         wi.windowClosed = false;
-        GUI frame = new GUI(g, "genRTS", wi, true, g.humanPlayer());
+        GUI frame = new GUI(g, "genRTS", wi, true, g.humanController());
         frame.addWindowListener(wi);
 
         g.run(frame);
     }
 
     public static void main(String[] args) {
-        Game g = init(new PlayerType[]{PlayerType.HUMAN, PlayerType.RANDOM});
+//        Game g = init(new PlayerType[]{PlayerType.HUMAN, PlayerType.RANDOM});
+//        Game g = init(new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM});
+//        Game g = init(new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED});
+        Game g = init(new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM, PlayerType.RANDOM_BIASED, PlayerType.RANDOM});
         runGame(g);
     }
 

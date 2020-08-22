@@ -15,17 +15,17 @@ public class Move extends Action {
     private final Vector2d gridDest;
     private final Deque<PfNode> path;
 
-    public Move(long unitId, Vector2d gridDest, Deque<PfNode> path) {
-        this.unitId = unitId;
-        this.gridDest = gridDest;
-        this.path = path;
-    }
-
     public Move(Unit unit, Vector2d gridDest, Grid grid) {
         this.unitId = unit.getEntityId();
         this.gridDest = gridDest;
 
         path = new Pathfinder(unit.getGridPos()).pathTo(gridDest, grid);
+    }
+
+    private Move(long unitId, Vector2d gridDest, Deque<PfNode> path) {
+        this.unitId = unitId;
+        this.gridDest = gridDest;
+        this.path = path;
     }
 
     @Override

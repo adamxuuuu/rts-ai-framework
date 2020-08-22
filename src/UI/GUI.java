@@ -3,6 +3,7 @@ package UI;
 import core.action.Action;
 import core.action.*;
 import core.entity.Entity;
+import core.entity.EntityFactory;
 import core.entity.Resource;
 import core.entity.Unit;
 import core.game.Game;
@@ -17,7 +18,6 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Random;
@@ -40,7 +40,7 @@ public class GUI extends JFrame {
     private final Random rnd = new Random();
 
     // Controller
-    private final HumanAgent human;
+    private final HumanAgent humanController;
     private final WindowInput wi;
 
     // Unit bounding box selection
@@ -49,7 +49,7 @@ public class GUI extends JFrame {
 
     static SpriteSheet spriteSheet = null;
 
-    public GUI(Game game, String title, WindowInput wi, boolean closeAppOnClosingWindow, HumanAgent human) {
+    public GUI(Game game, String title, WindowInput wi, boolean closeAppOnClosingWindow, HumanAgent humanController) {
         super(title);
 
         try {
@@ -68,7 +68,7 @@ public class GUI extends JFrame {
         INFO_PANEL_HEIGHT = (int) (0.4 * screenDiagonal * scale);
 
         this.game = game;
-        this.human = human;
+        this.humanController = humanController;
         this.wi = wi;
         this.gameView = new GameView(game);
         this.infoView = new InfoView();
@@ -125,10 +125,11 @@ public class GUI extends JFrame {
                 // Select
                 if (e.getButton() == MouseEvent.BUTTON1) {
                     selected.clear();
-                    Long selectedId = grid.selectUnitId(sp);
-                    if (selectedId != null) {
-                        selected.add(selectedId);
+                    long selectedId = grid.selectUnitId(humanController.playerID(), sp);
+                    if (selectedId == -1) {
+                        return;
                     }
+                    selected.add(selectedId);
                     // Interact
                 } else if (e.getButton() == MouseEvent.BUTTON3) {
                     if (!isValidPos(gp.x, gp.y) || !grid.accessible(gp.x, gp.y)) {
@@ -137,16 +138,17 @@ public class GUI extends JFrame {
                     }
 
                     Action toExecute;
-                    Entity enemy = grid.getEnemyAt(human.playerID(), gp);
+                    Entity enemy = grid.getEnemyAt(humanController.playerID(), gp);
                     if (enemy == null) {
-                        LinkedList<Vector2d> allocations = grid.findAllNearby(gp, (int) Math.ceil((Math.sqrt(selected.size()) - 1)));
+                        // TODO optimisation needed allocation is only for moving
+                        LinkedList<Vector2d> allocations = grid.allocateNearby(gp, selected.size());
                         allocations.push(gp);
                         for (long uId : selected) {
-                            Resource res = grid.getResourceAt(gp.x, gp.y);
                             Unit u = grid.getUnit(uId);
                             if (u == null) {
                                 return;
                             }
+                            Resource res = grid.getResourceAt(gp.x, gp.y);
                             if (u.getType().equals(Unit.Type.WORKER) && res != null) {
                                 // Add a harvest action to the human player's action map
                                 toExecute = new Harvest(uId, res.getEntityId());
@@ -154,12 +156,12 @@ public class GUI extends JFrame {
                                 // Add a move action to the human player's action map
                                 toExecute = new Move(grid.getUnit(uId), allocations.pop(), grid);
                             }
-                            human.addUnitAction(uId, toExecute);
+                            humanController.addUnitAction(toExecute);
                         }
                     } else {
                         for (long uId : selected) {
                             // Add a attack action to the human player's action map
-                            human.addUnitAction(uId, new Attack(uId, enemy.getEntityId()));
+                            humanController.addUnitAction(new Attack(uId, enemy.getEntityId()));
                         }
                     }
                 }
@@ -176,7 +178,11 @@ public class GUI extends JFrame {
                     selected.clear();
                     endDrag = new Vector2d(e.getX(), e.getY());
                     if (startDrag != null && !endDrag.equals(startDrag)) {
-                        selected.addAll(grid.selectUnitIds(startDrag, endDrag));
+                        ArrayList<Long> res = grid.selectUnitIds(humanController.playerID(), startDrag, endDrag);
+                        if (res == null || res.isEmpty()) {
+                            return;
+                        }
+                        selected.addAll(res);
                     }
                 }
             }
@@ -212,24 +218,21 @@ public class GUI extends JFrame {
         c.anchor = GridBagConstraints.SOUTH;
         c.weighty = 0;
 
-        File folder = new File("./resources/unit");
-        File[] listOfFiles = folder.listFiles();
-
 //      Buttons for building units and buildings
         JPanel unitButtons = new JPanel();
-        for (File file : listOfFiles != null ? listOfFiles : new File[0]) {
-            if (file.isFile()) {
-                String filename = file.getName();
-                JButton buildUnit = new JButton(filename.substring(0, filename.lastIndexOf('.')));
+        for (String entityName : EntityFactory.getInstance().unitTable.keySet()) {
+            JButton buildUnit = new JButton(entityName);
 
-                buildUnit.addActionListener(e -> {
-                    Unit unit = new Unit(file.getPath(), human.playerID());
-                    human.addBuildAction(new Build(unit));
-                });
+            buildUnit.addActionListener(a -> {
+                Unit unit = EntityFactory.getInstance().train(entityName, humanController.playerID());
+                if (!gs.checkResource(humanController.playerID(), unit.getCost())) {
+                    return;
+                }
+                humanController.addBuildAction(new Train(unit));
+            });
 
-                unitButtons.add(buildUnit);
-                sidePanel.add(unitButtons, c);
-            }
+            unitButtons.add(buildUnit);
+            sidePanel.add(unitButtons, c);
         }
 
         c.gridy++;

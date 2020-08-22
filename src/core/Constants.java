@@ -15,6 +15,8 @@ public class Constants {
             new Vector2d(GRID_SIZE - 4, 3)};
     public static Vector2d[] RESOURCE_LOCATION = new Vector2d[]{
             new Vector2d(0, 0), new Vector2d(1, 0), new Vector2d(0, 1),
+            new Vector2d(GRID_SIZE - 1, 0), new Vector2d(GRID_SIZE - 2, 0), new Vector2d(GRID_SIZE - 1, 1),
+            new Vector2d(0, GRID_SIZE - 1), new Vector2d(0, GRID_SIZE - 2), new Vector2d(1, GRID_SIZE - 1),
             new Vector2d(GRID_SIZE - 1, GRID_SIZE - 1), new Vector2d(GRID_SIZE - 2, GRID_SIZE - 1), new Vector2d(GRID_SIZE - 1, GRID_SIZE - 2)
     };
     public static final int STARTING_RESOURCE = 100;

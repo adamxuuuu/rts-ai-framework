@@ -23,6 +23,6 @@ public class None extends Action {
 
     @Override
     public boolean isComplete() {
-        return false;
+        return true;
     }
 }

@@ -2,12 +2,15 @@ package core.entity;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import util.Vector2d;
+
+import java.io.FileReader;
 
 public abstract class Entity {
 
     // Unique identifier of each entity
-    private static long nextId = 1000;
+    public static long nextId = 1000;
 
     /**
      * Unique ID of this entity.
@@ -36,22 +39,6 @@ public abstract class Entity {
     protected int currentHP; // Current hip point
     protected String[] spriteKey;
 
-    public void create() {
-        entityId = Entity.nextId++;
-    }
-
-    public void takeDamage(int amount) {
-        currentHP -= amount;
-    }
-
-    public boolean isDamaged() {
-        return currentHP < maxHp;
-    }
-
-    public boolean died() {
-        return currentHP <= 0;
-    }
-
     protected void loadBaseProperties(JSONObject jo) {
         this.name = (String) jo.get("name");
         this.cost = Math.toIntExact((Long) jo.get("cost"));
@@ -65,12 +52,52 @@ public abstract class Entity {
         currentHP = maxHp;
     }
 
+    //-----------------------------------------public--------------------------------------------//
+
     /**
      * Method to provide a copy of this actor.
      *
      * @return new copy fo the Actor
      */
     public abstract Entity copy();
+
+    public void copy(Entity copy) {
+        copy.setEntityId(entityId);
+        copy.setAgentId(agentId);
+        copy.setGridPos(gridPos);
+        copy.setScreenPos(screenPos);
+        copy.setMaxHp(maxHp);
+        copy.setCurrentHP(currentHP);
+        copy.setSpriteKey(spriteKey);
+        copy.setCost(cost);
+        copy.setBuildTime(buildTime);
+    }
+
+    public void loadFromJson(String path) {
+        JSONParser jsonParser = new JSONParser();
+
+        try (FileReader reader = new FileReader(path)) {
+            //Read JSON file
+            Object obj = jsonParser.parse(reader);
+            load((JSONObject) obj);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected abstract void load(JSONObject jo);
+
+    public void takeDamage(int amount) {
+        currentHP -= amount;
+    }
+
+    public boolean isDamaged() {
+        return currentHP < maxHp;
+    }
+
+    public boolean died() {
+        return currentHP <= 0;
+    }
 
     //----------------------------Getter&Setter----------------------------//
 
@@ -108,9 +135,14 @@ public abstract class Entity {
         return buildTime;
     }
 
+    public void setBuildTime(long buildTime) {
+        this.buildTime = buildTime;
+    }
+
     public int getCurrentHP() {
         return currentHP;
     }
+
     public void setCurrentHP(int currentHP) {
         this.currentHP = currentHP;
     }
@@ -118,8 +150,13 @@ public abstract class Entity {
     public int getMaxHp() {
         return maxHp;
     }
+
     public void setMaxHp(int maxHp) {
         this.maxHp = maxHp;
+    }
+
+    public void setCost(int cost) {
+        this.cost = cost;
     }
 
     public int getCost() {
@@ -129,7 +166,9 @@ public abstract class Entity {
     public String[] getSpriteKey() {
         return spriteKey;
     }
+
     public void setSpriteKey(String[] spriteKey) {
         this.spriteKey = spriteKey;
     }
+
 }

@@ -2,17 +2,16 @@ package core.game;
 
 import UI.GUI;
 import core.Constants;
-import core.action.Action;
 import core.entity.Building;
+import core.entity.EntityFactory;
+import core.entity.Unit;
 import player.Agent;
 import player.HumanAgent;
 import player.PlayerAction;
 
-import java.util.Iterator;
 import java.util.Random;
 
-import static core.Constants.BASE_LOCATION;
-import static core.Constants.TIME_PER_TICK;
+import static core.Constants.*;
 
 public class Game {
 
@@ -34,32 +33,38 @@ public class Game {
     }
 
     /**
-     * Default initialisation
+     * Game initialisation
      */
     public void init(Agent[] players) {
-        gs = new GameState();
+        this.gs = new GameState(new Grid(GRID_SIZE));
 
         this.seed = System.currentTimeMillis();
         this.rnd = new Random(seed);
 
         this.players = players;
         this.numPlayers = players.length;
-        initBase();
+
+        initBaseAndResource();
     }
 
-    private void initBase() {
+    private void initBaseAndResource() {
         if (numPlayers > Constants.BASE_LOCATION.length) {
             throw new IllegalArgumentException("Too many players");
         }
 
+        EntityFactory ef = EntityFactory.getInstance();
         for (int i = 0; i < numPlayers; i++) {
-            Building base = new Building("./resources/building/base.json", players[i].playerID());
+            int playerId = players[i].playerID();
+            Building base = ef.build("base", playerId);
             base.setGridPos(BASE_LOCATION[i]);
             if (!gs.addBuilding(base)) {
                 throw new IllegalArgumentException("Map does not have a base location");
             }
 
-            gs.manageResource(players[i].playerID(), Constants.STARTING_RESOURCE);
+            Unit worker = ef.train("worker", playerId);
+            gs.addUnit(worker, BASE_LOCATION[i]);
+
+            gs.handleResource(players[i].playerID(), Constants.STARTING_RESOURCE);
         }
     }
 
@@ -86,10 +91,11 @@ public class Game {
                 lag -= TIME_PER_TICK;
             }
 
-            boolean gameOver = gameOver();
-            if (gameOver) {
+            int winnerId = gameOver();
+            if (winnerId != -1) {
                 //TODO Post game processing
-                frame.dispose();
+                System.out.println("Game Over! The winner is: " + players()[winnerId].toString());
+                postGameProcess();
                 break;
             }
 
@@ -99,49 +105,35 @@ public class Game {
     }
 
     private void tick() {
-        // Process human input/actions
-        processInput();
+        System.out.print("Current tick: " + gs.getTicks() + '\r');
         for (Agent agent : players) {
-            if (agent instanceof HumanAgent) {
+            PlayerAction pa = agent.act(gs);
+            if (pa == null) {
                 continue;
             }
-            PlayerAction playerAction = agent.act(gs);
-            gs.addPlayerAction(playerAction);
+            gs.addPlayerAction(pa);
+            // Reset for human controller
+            if (agent instanceof HumanAgent) {
+                pa.reset();
+            }
         }
+
         // Advance game state by 16ms
-        gs.tick();
+        gs.tick(TIME_PER_TICK);
     }
 
-    private void processInput() {
-        HumanAgent human = humanPlayer();
-        Action act = human.firstBuildAction();
-        if (act != null) {
-            if (act.isComplete()) {
-                human.removeFirstBuildAct();
-            } else {
-                act.exec(gs, TIME_PER_TICK);
-            }
-        }
-        Iterator<Action> it = human.getUnitActions().values().iterator();
-        while (it.hasNext()) {
-            Action next = it.next();
-            if (next.isComplete()) {
-                it.remove();
-            } else {
-                next.exec(gs, TIME_PER_TICK);
-            }
-        }
-    }
-
-    private boolean gameOver() {
+    public int gameOver() {
         return gs.gameOver();
     }
 
-    /**
-     * @return the game grid
-     */
-    public Grid getGrid() {
-        return gs.getGrid();
+    private void postGameProcess() {
+        // TODO add post game analyses
+        gs.tick(0);
+        System.out.println("Total tick: " + gs.getTicks());
+    }
+
+    public int size() {
+        return gs.getGrid().size();
     }
 
     /**
@@ -152,11 +144,9 @@ public class Game {
     }
 
     /**
-     * Return the human player
-     *
      * @return the human player
      */
-    public HumanAgent humanPlayer() {
+    public HumanAgent humanController() {
         for (Agent ag : players) {
             if (ag instanceof HumanAgent) {
                 return (HumanAgent) ag;

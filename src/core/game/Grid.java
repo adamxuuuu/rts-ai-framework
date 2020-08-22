@@ -10,9 +10,9 @@ import util.Utils;
 import util.Vector2d;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Grid {
-
 
     /**
      * Terrain type
@@ -28,29 +28,28 @@ public class Grid {
      * Height value for each cell in the grid
      */
     private float[][] heightMap;
+
     /**
      * Terrain type calculated based on height value
      */
     private TerrainType[][] terrain;
-
-    /**
-     * Buildings
-     */
     private Building[][] buildings;
-
     private Resource[][] resources;
 
     /**
-     * All units on the grid
+     * All units
      */
-    private final Map<Long, Unit> units = new HashMap<>();
+    private final Map<Long, Unit> unitMap = new HashMap<>();
 
-    private final Map<Long, Entity> allEntities = new HashMap<>();
+    /**
+     * All entities
+     */
+    private final Map<Long, Entity> entityMap = new HashMap<>();
 
-    public Grid() {
+    private Grid() {
     }
 
-    public Grid(int size) {
+    Grid(int size) {
         this.size = size;
 
         heightMap = new float[size][size];
@@ -65,11 +64,11 @@ public class Grid {
     }
 
     public Collection<Entity> entities() {
-        return allEntities.values();
+        return entityMap.values();
     }
 
     public Entity getEntity(long id) {
-        return allEntities.get(id);
+        return entityMap.get(id);
     }
 
     public Resource getResourceAt(int x, int y) {
@@ -88,57 +87,88 @@ public class Grid {
         return null;
     }
 
-    public Entity getEnemyAt(int playerID, Vector2d gp) {
+    public Entity getEnemyAt(int playerId, Vector2d gp) {
         Building b = getBuildingAt(gp.x, gp.y);
-        if (b != null && b.getAgentId() != playerID) {
+        if (b != null && b.getAgentId() != playerId) {
             return b;
         }
 
-        Optional<Unit> enemy = units.values().stream().filter(u -> u.getGridPos().equals(gp) && u.getAgentId() != playerID).findFirst();
+        Optional<Unit> enemy = units().stream().filter(u -> u.getGridPos().equals(gp) && u.getAgentId() != playerId).findFirst();
         return enemy.orElse(null);
     }
 
-    /**
-     * Add a {@link Unit} to the map
-     *
-     * @param addUnit unit
-     */
+    public ArrayList<Entity> getEnemyInRange(Unit unit) {
+        ArrayList<Entity> enemies = entities().stream().filter(e ->
+                !(e instanceof Resource) &&
+                        e.getAgentId() != unit.getAgentId() &&
+                        Vector2d.euclideanDistance(unit.getGridPos(), e.getGridPos()) < unit.getRange())
+                .collect(Collectors.toCollection(ArrayList::new));
+
+
+        return enemies;
+    }
+
     void addUnit(Unit addUnit) {
         Vector2d gp = addUnit.getGridPos();
         if (!accessible(gp.x, gp.y) && occupied(gp.x, gp.y)) {
             return;
         }
 
-        units.put(addUnit.getEntityId(), addUnit);
-        allEntities.put(addUnit.getEntityId(), addUnit);
+        unitMap.put(addUnit.getEntityId(), addUnit);
+        entityMap.put(addUnit.getEntityId(), addUnit);
     }
 
-    /**
-     * @param e {@link Entity} to be removed
-     */
     public void removeEntity(Entity e) {
         long id = e.getEntityId();
         Vector2d gp = e.getGridPos();
         if (e instanceof Unit) {
-            units.remove(id);
+            unitMap.remove(id);
         } else if (e instanceof Building) {
             buildings[gp.x][gp.y] = null;
         } else if (e instanceof Resource) {
             resources[gp.x][gp.y] = null;
         }
-        allEntities.remove(id);
+        entityMap.remove(id);
     }
 
-    public LinkedList<Vector2d> findAllNearby(Vector2d gp, int maxRange) {
+    /**
+     * Find valid position near give grid position
+     *
+     * @param gp   grid position
+     * @param need how many location needed
+     * @return a list of position
+     */
+    public LinkedList<Vector2d> allocateNearby(Vector2d gp, int need) {
         LinkedList<Vector2d> res = new LinkedList<>();
-        for (Vector2d pos : gp.neighborhood(maxRange, 0, size, true)) {
-            if (accessible(pos.x, pos.y) && !occupied(pos.x, pos.y)) {
-                res.push(pos);
+        if (need == 1) {
+            return res;
+        }
+        int find = 0;
+        int startRange = 1;
+        while (find < need) {
+            for (Vector2d pos : gp.neighborhood(startRange, 0, size, true)) {
+                if (accessible(pos.x, pos.y)) {
+                    res.add(pos);
+                    find++;
+                    if (need - find == 1) {
+                        return res;
+                    }
+                }
             }
+            find = 0;
+            startRange++;
+            res.clear();
         }
         return res;
     }
 
+    /**
+     * Find first valid location near given grid position
+     *
+     * @param gp       grid position
+     * @param maxRange how far you want to search
+     * @return the first find
+     */
     public Vector2d findFirstNearby(Vector2d gp, int maxRange) {
         for (int radius = 1; radius < maxRange; radius++) {
             for (Vector2d pos : gp.neighborhood(radius, 0, size, true)) {
@@ -150,25 +180,34 @@ public class Grid {
         return null;
     }
 
+    /**
+     * Find all valid position near gp within a range
+     *
+     * @param gp     grip position
+     * @param radius search range
+     * @return list of position
+     */
+    public ArrayList<Vector2d> findAllNearby(Vector2d gp, int radius) {
+        if (radius < 1) {
+            throw new IllegalArgumentException("Range cannot be zero");
+        }
+        ArrayList<Vector2d> res = new ArrayList<>();
+        for (Vector2d pos : gp.neighborhood(radius, 0, size, true)) {
+            if (accessible(pos.x, pos.y) && !occupied(pos.x, pos.y)) {
+                res.add(pos);
+            }
+        }
+        return res;
+    }
+
     public Building getBuildingAt(int x, int y) {
         return buildings[x][y];
     }
 
-    boolean addBuilding(Building b) {
-        Vector2d gp = b.getGridPos();
-        if (!accessible(gp.x, gp.y) || buildings[gp.x][gp.y] != null) {
-            return false;
-        }
-
-        buildings[gp.x][gp.y] = b;
-        allEntities.put(b.getEntityId(), b);
-        return true;
-    }
-
     /**
-     * @param playerId owner
+     * @param playerId
      * @param bt       {@link Building.Type}
-     * @return the {@link Building}
+     * @return
      */
     public Building getBuilding(long playerId, Building.Type bt) {
         for (int i = 0; i < size; i++) {
@@ -180,6 +219,17 @@ public class Grid {
             }
         }
         return null;
+    }
+
+    boolean addBuilding(Building b) {
+        Vector2d gp = b.getGridPos();
+        if (!accessible(gp.x, gp.y) || buildings[gp.x][gp.y] != null) {
+            return false;
+        }
+
+        buildings[gp.x][gp.y] = b;
+        entityMap.put(b.getEntityId(), b);
+        return true;
     }
 
     /**
@@ -202,15 +252,21 @@ public class Grid {
             }
         }
 
-        for (Entity e : allEntities.values()) {
+        for (Entity e : entityMap.values()) {
             Entity copy = e.copy();
             if (copy instanceof Unit) {
-                copyGrid.units.put(copy.getEntityId(), (Unit) copy);
+                copyGrid.unitMap.put(copy.getEntityId(), (Unit) copy);
             }
-            copyGrid.allEntities.put(copy.getEntityId(), copy);
+            copyGrid.entityMap.put(copy.getEntityId(), copy);
         }
 
         return copyGrid;
+    }
+
+    public Vector2d randomPos(Random rnd) {
+        int x = rnd.nextInt(size);
+        int y = rnd.nextInt(size);
+        return new Vector2d(x, y);
     }
 
     /**
@@ -225,6 +281,9 @@ public class Grid {
         }
     }
 
+    /**
+     * Generate Terrain based on height map
+     */
     private void generateTerrain() {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
@@ -240,37 +299,70 @@ public class Grid {
         }
     }
 
+    /**
+     * Generate Resources (using default location)
+     */
     private void initResources() {
         for (Vector2d loc : Constants.RESOURCE_LOCATION) {
             Resource resource = new Resource(Resource.Type.RICH);
             resource.setGridPos(loc);
             resources[loc.x][loc.y] = resource;
-            allEntities.put(resource.getEntityId(), resource);
+            entityMap.put(resource.getEntityId(), resource);
         }
     }
 
-    public Map<Long, Unit> unitMap() {
-        return units;
+    /**
+     * Get all unit belong to a player
+     *
+     * @param playerId player id
+     * @return all the units or am empty list
+     */
+    public List<Unit> getUnits(int playerId) {
+        return unitMap.values().stream().filter(unit -> unit.getAgentId() == playerId).collect(Collectors.toList());
+    }
+
+    public Collection<Unit> units() {
+        return unitMap.values();
+    }
+
+    public Set<Long> unitIds() {
+        return unitMap.keySet();
     }
 
     /**
-     * Single unit selection
+     * Select a single unit with player id
+     * and screen position with error of half the cell size
+     *
+     * @param playerId player id
+     * @param sp       screen position
+     * @return the first unit or -1 if not unit is find or
      */
-    public Long selectUnitId(Vector2d sp) {
-        for (Unit u : units.values()) {
+    public long selectUnitId(int playerId, Vector2d sp) {
+        for (Unit u : unitMap.values()) {
+            if (playerId != u.getAgentId()) {
+                continue;
+            }
             if (u.getScreenPos().equalsPlusError(sp, Constants.CELL_SIZE / 2.0)) {
                 return u.getEntityId();
             }
         }
-        return null;
+        return -1;
     }
 
     /**
-     * Bounding box selection
+     * Select multiple unit with a bounding box and player id
+     *
+     * @param playerId player id
+     * @param start    top left (bottom right) of the bounding box
+     * @param end      bottom right (top left) of the bounding box
+     * @return a list of units or a empty list is not unit is selected
      */
-    public ArrayList<Long> selectUnitIds(Vector2d start, Vector2d end) {
+    public ArrayList<Long> selectUnitIds(int playerId, Vector2d start, Vector2d end) {
         ArrayList<Long> res = new ArrayList<>();
-        for (Unit u : units.values()) {
+        for (Unit u : unitMap.values()) {
+            if (playerId != u.getAgentId()) {
+                continue;
+            }
             Vector2d sp = u.getScreenPos();
             if ((sp.greater(start) && sp.less(end))
                     || (sp.less(start) && sp.greater(end))) {
@@ -281,27 +373,22 @@ public class Grid {
     }
 
     /**
-     * Get the game entity with Id
+     * Get the unit with specific id
      *
-     * @param unitId entity Id
+     * @param unitId id
      * @return the entity or null if the entity doesn't exist
      */
     public Unit getUnit(long unitId) {
-        return units.get(unitId);
+        return unitMap.get(unitId);
     }
 
-    public int size() {
-        return size;
-    }
-
-    public float getHeightAt(int x, int y) {
-        return heightMap[x][y];
-    }
-
-    public TerrainType getTerrainAt(int x, int y) {
-        return terrain[x][y];
-    }
-
+    /**
+     * Check if a position is movable (Land)
+     *
+     * @param x X position
+     * @param y Y position
+     * @return true if the position is movable or the opposite
+     */
     public boolean accessible(int x, int y) {
         float h = getHeightAt(x, y);
         return h >= Constants.WATER_LVL &&
@@ -313,7 +400,7 @@ public class Grid {
             return true;
         }
         Vector2d pos = new Vector2d(x, y);
-        for (Entity e : units.values()) {
+        for (Entity e : unitMap.values()) {
             if (e.getGridPos().equals(pos)) {
                 return true;
             }
@@ -323,17 +410,35 @@ public class Grid {
 
     /**
      * Update a unit grid position given screen position
+     *
+     * @param u  unit
+     * @param sp screen position
      */
-    public void updateGridPos(Unit u, Vector2d newScreenPos) {
-        u.setScreenPos(newScreenPos);
-        u.setGridPos(GameView.screenToGrid(newScreenPos));
+    public void updateGridPos(Unit u, Vector2d sp) {
+        u.setScreenPos(sp);
+        u.setGridPos(GameView.screenToGrid(sp));
     }
 
     /**
      * Update a unit screen position given grid position
+     *
+     * @param u  unit
+     * @param gp grid position
      */
-    public void updateScreenPos(Unit u, Vector2d newGridPos) {
-        u.setGridPos(newGridPos);
-        u.setScreenPos(GameView.gridToScreen(newGridPos));
+    public void updateScreenPos(Unit u, Vector2d gp) {
+        u.setGridPos(gp);
+        u.setScreenPos(GameView.gridToScreen(gp));
+    }
+
+    public float getHeightAt(int x, int y) {
+        return heightMap[x][y];
+    }
+
+    public TerrainType getTerrainAt(int x, int y) {
+        return terrain[x][y];
+    }
+
+    public int size() {
+        return size;
     }
 }

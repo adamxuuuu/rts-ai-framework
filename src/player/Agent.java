@@ -1,19 +1,14 @@
 package player;
 
-import core.action.Action;
 import core.game.GameState;
-
-import java.util.Map;
 
 public abstract class Agent {
 
-    int playerID;
-    long seed;
-    PlayerAction playerAction;
+    public int playerId;
+    public long seed;
 
     public Agent(long seed) {
         this.seed = seed;
-        playerAction = new PlayerAction(playerID);
     }
 
     /**
@@ -27,34 +22,14 @@ public abstract class Agent {
     public abstract Agent copy();
 
     public final int playerID() {
-        return playerID;
+        return playerId;
     }
 
-    public final void setPlayerID(int playerID) {
-        this.playerID = playerID;
-    }
-
-    public void addUnitAction(long uId, Action action) {
-        playerAction.addUnitAction(uId, action);
-    }
-
-    public void addBuildAction(Action candidate) {
-        playerAction.addBuildAction(candidate);
-    }
-
-    public Map<Long, Action> getUnitActions() {
-        return playerAction.unitActions();
-    }
-
-    public Action firstBuildAction() {
-        return playerAction.buildActions().peek();
-    }
-
-    public Action removeFirstBuildAct() {
-        return playerAction.buildActions().poll();
+    public final void setPlayerId(int playerId) {
+        this.playerId = playerId;
     }
 
     public String toString() {
-        return this.getClass().getName();
+        return this.getClass().getName() + playerId;
     }
 }

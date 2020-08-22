@@ -1,5 +1,6 @@
 package UI;
 
+import core.Constants;
 import core.entity.Building;
 import core.entity.Entity;
 import core.entity.Resource;
@@ -7,6 +8,7 @@ import core.entity.Unit;
 import core.game.Game;
 import core.game.GameState;
 import core.game.Grid;
+import player.Agent;
 import util.FPSCounter;
 import util.Utils;
 import util.Vector2d;
@@ -27,7 +29,7 @@ public class GameView extends JComponent {
     // Game
     private final Game game;
     private GameState gs;
-    private final Grid grid;
+    private Grid grid;
 
     // Setting
     private boolean showGrid;
@@ -37,11 +39,10 @@ public class GameView extends JComponent {
         dimension = new Dimension(GUI_GAME_VIEW_SIZE, GUI_GAME_VIEW_SIZE);
 
         this.game = game;
-        this.grid = game.getGrid().copy();
-        size = grid.size();
-
         this.fpsCounter = new FPSCounter();
+
         fpsCounter.start();
+        size = game.size();
     }
 
     public Dimension getPreferredSize() {
@@ -50,6 +51,7 @@ public class GameView extends JComponent {
 
     void render(GameState gs) {
         this.gs = gs;
+        this.grid = gs.getGrid();
     }
 
     public void paintComponent(Graphics g) {
@@ -75,10 +77,16 @@ public class GameView extends JComponent {
 
     private void printInfo(Graphics2D g) {
         // Show resources
-        int resource = gs.getResource(game.humanPlayer().playerID());
-        g.setFont(new Font("Arial", Font.BOLD, 25));
-        g.drawString("Resource: " + resource, 0, dimension.height - CELL_SIZE); //added line (step 5).
+        int offset = 0;
+        for (Agent agent : game.players()) {
+            g.setColor(Constants.PLAYER_COLOR[agent.playerId]);
+            int resource = gs.getResource(agent.playerID());
+            g.setFont(new Font("Arial", Font.BOLD, 25));
+            g.drawString("Resource: " + resource, offset, dimension.height - CELL_SIZE); //added line (step 5).
+            offset += dimension.width / 5;
+        }
         // Count frames
+        g.setColor(Color.GREEN);
         fpsCounter.incFrame(); //added line (step 4).
         g.setFont(new Font("Arial", Font.BOLD, 25));
         g.drawString("FPS: " + fpsCounter.get(), 0, dimension.height); //added line (step 5).
@@ -133,7 +141,7 @@ public class GameView extends JComponent {
         }
 
         // Units
-        for (Unit u : gs.allUnits()) {
+        for (Unit u : grid.units()) {
             Vector2d sp = u.getScreenPos();
             BufferedImage bi = getSprite(u);
             float[] scales = {1f, 1f, 1f, 1f};

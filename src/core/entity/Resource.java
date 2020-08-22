@@ -1,6 +1,7 @@
 package core.entity;
 
 import core.Constants;
+import org.json.simple.JSONObject;
 
 public class Resource extends Entity {
 
@@ -9,7 +10,7 @@ public class Resource extends Entity {
     private final Type type;
 
     public Resource(Type type) {
-        super.create();
+        this.entityId = Entity.nextId++;
         this.type = type;
         switch (type) {
             case NORMAL -> {
@@ -34,6 +35,11 @@ public class Resource extends Entity {
         Resource copy = new Resource(type, maxHp);
         copy.spriteKey = spriteKey;
         return copy;
+
+    }
+
+    @Override
+    protected void load(JSONObject jo) {
 
     }
 
