@@ -29,7 +29,7 @@ public class Harvest extends Action {
 
     @Override
     public void exec(GameState gs, double elapsed) {
-        Grid grid = gs.getGrid();
+        Grid grid = gs.grid();
         Unit harvester = grid.getUnit(workerId);
 
         if (harvester == null) {
@@ -43,7 +43,13 @@ public class Harvest extends Action {
         // Return to base
         if (harvester.isFull()) {
             int playerId = harvester.getAgentId();
-            Vector2d basePos = grid.getBuilding(playerId, Building.Type.BASE).getGridPos();
+            Building base = grid.getBuilding(playerId, Building.Type.BASE);
+            if (base == null) {
+                isComplete = true;
+                return;
+            }
+
+            Vector2d basePos = base.getGridPos();
             LinkedList<Vector2d> temp = basePos.neighborhood(1, 0, grid.size(), false);
             Vector2d dest = Utils.shortestPos(basePos, temp, grid);
 

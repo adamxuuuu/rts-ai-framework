@@ -33,6 +33,7 @@ public class Resource extends Entity {
     @Override
     public Entity copy() {
         Resource copy = new Resource(type, maxHp);
+        super.copy(copy);
         copy.spriteKey = spriteKey;
         return copy;
 

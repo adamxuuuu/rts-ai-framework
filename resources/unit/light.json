@@ -1,11 +1,11 @@
 {
   "type": 0,
   "name": "light",
-  "speed": 5,
+  "speed": 2,
   "range": 2,
   "cost": 10,
   "maxHp": 10,
-  "attack": 20,
+  "attack": 2,
   "buildTime": 1,
   "rateOfFire": 1,
   "spriteKey": [

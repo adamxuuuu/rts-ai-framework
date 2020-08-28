@@ -30,7 +30,7 @@ public class Move extends Action {
 
     @Override
     public void exec(GameState gs, double elapsed) {
-        Grid grid = gs.getGrid();
+        Grid grid = gs.grid();
         Unit unit = grid.getUnit(unitId);
         // Unit may die during the process
         if (unit == null) {

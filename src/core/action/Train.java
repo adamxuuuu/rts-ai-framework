@@ -48,7 +48,12 @@ public class Train extends Action {
             return;
         }
 
-        Building source = gs.getGrid().getBuilding(unit.getAgentId(), Building.Type.BASE);
+        Building source = gs.grid().getBuilding(unit.getAgentId(), Building.Type.BASE);
+        if (source == null) {
+            // Building got destroyed
+            isComplete = true;
+            return;
+        }
         gs.addUnit(unit, source.getGridPos());
 
         isComplete = true;

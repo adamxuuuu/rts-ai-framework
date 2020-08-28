@@ -3,6 +3,7 @@ package player;
 import core.action.Action;
 import core.action.Attack;
 import core.action.Harvest;
+import core.action.None;
 import core.entity.Unit;
 import core.game.GameState;
 
@@ -17,7 +18,7 @@ public class PlayerActionFactory {
      * Unit id ---- List of actions
      */
     private Map<Long, List<Action>> unitChoices;
-    private List<Action> buildChoices;
+    private List<Action> trainChoices;
 
     public PlayerActionFactory(GameState gs, int playerId) {
         this.gs = gs;
@@ -26,19 +27,23 @@ public class PlayerActionFactory {
         generate();
     }
 
-    public void generate() {
+    private void generate() {
         unitChoices = new HashMap<>();
-        buildChoices = new ArrayList<>();
+        trainChoices = new ArrayList<>();
 
-        for (Unit u : gs.getGrid().getUnits(playerId)) {
+        for (Unit u : gs.grid().getUnits(playerId)) {
             long uId = u.getEntityId();
-            if (gs.getUnitAction(uId) == null) {
+            Action currentAct = gs.getUnitAction(uId);
+            if (currentAct == null || currentAct instanceof None) {
                 List<Action> acts = u.calculateActions(gs);
+                if (acts.isEmpty()) {
+                    continue;
+                }
                 unitChoices.put(uId, acts);
             }
         }
 
-        buildChoices.addAll(gs.calBuildActions(playerId));
+        trainChoices.addAll(gs.getAllAvailableTrainActions(playerId));
     }
 
     /**
@@ -47,11 +52,9 @@ public class PlayerActionFactory {
     public PlayerAction randomAction(Random rnd) {
         PlayerAction pa = new PlayerAction(playerId);
 
-        if (!unitChoices.isEmpty()) {
-            unitChoices.forEach((k, v) -> pa.addUnitAction(k, v.get(rnd.nextInt(v.size()))));
-        }
+        addRandomUnitAction(pa, rnd, false);
 
-        randomBuildAction(pa, rnd);
+        addRandomTrainAction(pa, rnd);
 
         return pa;
     }
@@ -63,31 +66,41 @@ public class PlayerActionFactory {
     public PlayerAction randomBiasedAction(Random rnd) {
         PlayerAction pa = new PlayerAction(playerId);
 
-        if (!unitChoices.isEmpty()) {
-            unitChoices.forEach((k, v) -> pa.addUnitAction(k, biasedUnitAction(v, rnd)));
-        }
+        addRandomUnitAction(pa, rnd, true);
 
-        randomBuildAction(pa, rnd);
+        addRandomTrainAction(pa, rnd);
 
         return pa;
     }
 
     /**
-     * @return first non move action if has any
+     * @return first non move action if biased
      * or a random action is selected
      */
-    private Action biasedUnitAction(List<Action> choices, Random rnd) {
-        for (Action a : choices) {
-            if (a instanceof Attack || a instanceof Harvest) {
-                return a;
+    private Action selectUnitAction(List<Action> choices, Random rnd, boolean biased) {
+        if (biased) {
+            for (Action a : choices) {
+                if (a instanceof Attack || a instanceof Harvest) {
+                    return a;
+                }
             }
         }
-        return choices.get(rnd.nextInt(choices.size()));
+        return choices.remove(rnd.nextInt(choices.size()));
     }
 
-    private void randomBuildAction(PlayerAction pa, Random rnd) {
-        if (!buildChoices.isEmpty()) {
-            pa.addBuildAction(buildChoices.get(rnd.nextInt(buildChoices.size())));
+    private void addRandomTrainAction(PlayerAction pa, Random rnd) {
+        if (!trainChoices.isEmpty()) {
+            pa.addTrainAction(trainChoices.remove(rnd.nextInt(trainChoices.size())));
+        }
+    }
+
+    private void addRandomUnitAction(PlayerAction pa, Random rnd, boolean biased) {
+        if (!unitChoices.isEmpty()) {
+            unitChoices.forEach((k, v) -> {
+                if (!v.isEmpty()) {
+                    pa.addUnitAction(k, selectUnitAction(v, rnd, biased));
+                }
+            });
         }
     }
 

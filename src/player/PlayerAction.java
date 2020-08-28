@@ -11,28 +11,28 @@ public class PlayerAction {
 
     private final int playerId;
     private final Map<Long, Action> unitActions;
-    private final Queue<Action> buildActions;
+    private final Queue<Action> trainActions;
 
     public PlayerAction(int playerId) {
         this.playerId = playerId;
         unitActions = new ConcurrentHashMap<>();
-        buildActions = new LinkedList<>();
+        trainActions = new LinkedList<>();
     }
 
     void addUnitAction(long uId, Action action) {
         unitActions.put(uId, action);
     }
 
-    void addBuildAction(Action action) {
-        buildActions.add(action);
+    void addTrainAction(Action action) {
+        trainActions.add(action);
     }
 
     public Map<Long, Action> unitActions() {
         return unitActions;
     }
 
-    public Queue<Action> buildActions() {
-        return buildActions;
+    public Queue<Action> trainActions() {
+        return trainActions;
     }
 
     public int playerId() {
@@ -41,6 +41,18 @@ public class PlayerAction {
 
     public void reset() {
         unitActions.clear();
-        buildActions.clear();
+        trainActions.clear();
+    }
+
+    public boolean empty() {
+        return unitActions.isEmpty() && trainActions.isEmpty();
+    }
+
+    @Override
+    public String toString() {
+        return "PlayerAction{" +
+                "unitActions=" + unitActions +
+                ", trainActions=" + trainActions +
+                '}';
     }
 }

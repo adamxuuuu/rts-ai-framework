@@ -51,7 +51,7 @@ public class GameView extends JComponent {
 
     void render(GameState gs) {
         this.gs = gs;
-        this.grid = gs.getGrid();
+        this.grid = gs.grid();
     }
 
     public void paintComponent(Graphics g) {
@@ -83,13 +83,16 @@ public class GameView extends JComponent {
             int resource = gs.getResource(agent.playerID());
             g.setFont(new Font("Arial", Font.BOLD, 25));
             g.drawString("Resource: " + resource, offset, dimension.height - CELL_SIZE); //added line (step 5).
-            offset += dimension.width / 5;
+            offset += dimension.width / 4;
         }
         // Count frames
         g.setColor(Color.GREEN);
         fpsCounter.incFrame(); //added line (step 4).
         g.setFont(new Font("Arial", Font.BOLD, 25));
         g.drawString("FPS: " + fpsCounter.get(), 0, dimension.height); //added line (step 5).
+
+        // Count game objects
+        g.drawString("Gameobjects: " + gs.objectsCount(), dimension.width / 5, dimension.height); //added line (step 5).
     }
 
     private void drawGrid(Graphics2D g) {
@@ -182,7 +185,7 @@ public class GameView extends JComponent {
     }
 
     private void drawHealthBar(Graphics2D g, int x, int y, int barWidth) {
-        g.fillRect(x, (int) (y - CELL_SIZE / 2.5), barWidth, CELL_SIZE / 10);
+        g.fillRect(x, y - CELL_SIZE / 2, barWidth, CELL_SIZE / 10);
     }
 
     /**

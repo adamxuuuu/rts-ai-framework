@@ -64,6 +64,7 @@ public abstract class Entity {
     public void copy(Entity copy) {
         copy.setEntityId(entityId);
         copy.setAgentId(agentId);
+        copy.setName(name);
         copy.setGridPos(gridPos);
         copy.setScreenPos(screenPos);
         copy.setMaxHp(maxHp);
@@ -104,7 +105,6 @@ public abstract class Entity {
     public long getEntityId() {
         return entityId;
     }
-
     public void setEntityId(long entityId) {
         this.entityId = entityId;
     }
@@ -126,7 +126,6 @@ public abstract class Entity {
     public Vector2d getScreenPos() {
         return screenPos;
     }
-
     public void setScreenPos(Vector2d screenPos) {
         this.screenPos = screenPos;
     }
@@ -134,7 +133,6 @@ public abstract class Entity {
     public long getBuildTime() {
         return buildTime;
     }
-
     public void setBuildTime(long buildTime) {
         this.buildTime = buildTime;
     }
@@ -142,7 +140,6 @@ public abstract class Entity {
     public int getCurrentHP() {
         return currentHP;
     }
-
     public void setCurrentHP(int currentHP) {
         this.currentHP = currentHP;
     }
@@ -150,7 +147,6 @@ public abstract class Entity {
     public int getMaxHp() {
         return maxHp;
     }
-
     public void setMaxHp(int maxHp) {
         this.maxHp = maxHp;
     }
@@ -158,7 +154,6 @@ public abstract class Entity {
     public void setCost(int cost) {
         this.cost = cost;
     }
-
     public int getCost() {
         return cost;
     }
@@ -171,4 +166,11 @@ public abstract class Entity {
         this.spriteKey = spriteKey;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

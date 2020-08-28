@@ -63,7 +63,7 @@ public class GUI extends JFrame {
         screenDiagonal = Math.sqrt(rect.width * rect.width + rect.height * rect.height);
 
         // Settings
-        GUI_GAME_VIEW_SIZE = (int) (0.46 * screenDiagonal * scale);
+        GUI_GAME_VIEW_SIZE = (int) (0.35 * screenDiagonal * scale);
         GUI_SIDE_PANEL_WIDTH = (int) (0.1 * screenDiagonal * scale);
         INFO_PANEL_HEIGHT = (int) (0.4 * screenDiagonal * scale);
 
@@ -117,87 +117,89 @@ public class GUI extends JFrame {
     private JPanel createGamePanel() {
 
         JPanel panel = new JPanel();
-        panel.addMouseListener(new MouseListener() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                Vector2d sp = new Vector2d(e.getX(), e.getY());
-                Vector2d gp = GameView.screenToGrid(sp);
-                // Select
-                if (e.getButton() == MouseEvent.BUTTON1) {
-                    selected.clear();
-                    long selectedId = grid.selectUnitId(humanController.playerID(), sp);
-                    if (selectedId == -1) {
-                        return;
-                    }
-                    selected.add(selectedId);
-                    // Interact
-                } else if (e.getButton() == MouseEvent.BUTTON3) {
-                    if (!isValidPos(gp.x, gp.y) || !grid.accessible(gp.x, gp.y)) {
-                        // TODO invalid mouse location
-                        return;
-                    }
-
-                    Action toExecute;
-                    Entity enemy = grid.getEnemyAt(humanController.playerID(), gp);
-                    if (enemy == null) {
-                        // TODO optimisation needed allocation is only for moving
-                        LinkedList<Vector2d> allocations = grid.allocateNearby(gp, selected.size());
-                        allocations.push(gp);
-                        for (long uId : selected) {
-                            Unit u = grid.getUnit(uId);
-                            if (u == null) {
-                                return;
-                            }
-                            Resource res = grid.getResourceAt(gp.x, gp.y);
-                            if (u.getType().equals(Unit.Type.WORKER) && res != null) {
-                                // Add a harvest action to the human player's action map
-                                toExecute = new Harvest(uId, res.getEntityId());
-                            } else {
-                                // Add a move action to the human player's action map
-                                toExecute = new Move(grid.getUnit(uId), allocations.pop(), grid);
-                            }
-                            humanController.addUnitAction(toExecute);
-                        }
-                    } else {
-                        for (long uId : selected) {
-                            // Add a attack action to the human player's action map
-                            humanController.addUnitAction(new Attack(uId, enemy.getEntityId()));
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                startDrag = new Vector2d(e.getX(), e.getY());
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (e.getButton() == MouseEvent.BUTTON1) {
-                    selected.clear();
-                    endDrag = new Vector2d(e.getX(), e.getY());
-                    if (startDrag != null && !endDrag.equals(startDrag)) {
-                        ArrayList<Long> res = grid.selectUnitIds(humanController.playerID(), startDrag, endDrag);
-                        if (res == null || res.isEmpty()) {
+        if (humanController != null) {
+            panel.addMouseListener(new MouseListener() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    Vector2d sp = new Vector2d(e.getX(), e.getY());
+                    Vector2d gp = GameView.screenToGrid(sp);
+                    // Select
+                    if (e.getButton() == MouseEvent.BUTTON1) {
+                        selected.clear();
+                        long selectedId = grid.selectUnitId(humanController.playerID(), sp);
+                        if (selectedId == -1) {
                             return;
                         }
-                        selected.addAll(res);
+                        selected.add(selectedId);
+                        // Interact
+                    } else if (e.getButton() == MouseEvent.BUTTON3) {
+                        if (!isValidPos(gp.x, gp.y) || !grid.accessible(gp.x, gp.y)) {
+                            // TODO invalid mouse location
+                            return;
+                        }
+
+                        Action toExecute;
+                        Entity enemy = grid.getEnemyAt(humanController.playerID(), gp);
+                        if (enemy == null) {
+                            // TODO optimisation needed allocation is only for moving
+                            LinkedList<Vector2d> allocations = grid.allocateNearby(gp, selected.size());
+                            allocations.push(gp);
+                            for (long uId : selected) {
+                                Unit u = grid.getUnit(uId);
+                                if (u == null) {
+                                    return;
+                                }
+                                Resource res = grid.getResourceAt(gp.x, gp.y);
+                                if (u.getType().equals(Unit.Type.WORKER) && res != null) {
+                                    // Add a harvest action to the human player's action map
+                                    toExecute = new Harvest(uId, res.getEntityId());
+                                } else {
+                                    // Add a move action to the human player's action map
+                                    toExecute = new Move(grid.getUnit(uId), allocations.pop(), grid);
+                                }
+                                humanController.addUnitAction(toExecute);
+                            }
+                        } else {
+                            for (long uId : selected) {
+                                // Add a attack action to the human player's action map
+                                humanController.addUnitAction(new Attack(uId, enemy.getEntityId()));
+                            }
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                setFocusable(true);
-                requestFocus();
-            }
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    startDrag = new Vector2d(e.getX(), e.getY());
+                }
 
-            @Override
-            public void mouseExited(MouseEvent e) {
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    if (e.getButton() == MouseEvent.BUTTON1) {
+                        selected.clear();
+                        endDrag = new Vector2d(e.getX(), e.getY());
+                        if (startDrag != null && !endDrag.equals(startDrag)) {
+                            ArrayList<Long> res = grid.selectUnitIds(humanController.playerID(), startDrag, endDrag);
+                            if (res == null || res.isEmpty()) {
+                                return;
+                            }
+                            selected.addAll(res);
+                        }
+                    }
+                }
 
-            }
-        });
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    setFocusable(true);
+                    requestFocus();
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+
+                }
+            });
+        }
 
         panel.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
@@ -219,20 +221,23 @@ public class GUI extends JFrame {
         c.weighty = 0;
 
 //      Buttons for building units and buildings
-        JPanel unitButtons = new JPanel();
-        for (String entityName : EntityFactory.getInstance().unitTable.keySet()) {
-            JButton buildUnit = new JButton(entityName);
+        EntityFactory ef = EntityFactory.getInstance();
+        if (humanController != null) {
+            JPanel unitButtons = new JPanel();
+            for (String entityName : ef.unitTable.keySet()) {
+                JButton buildUnit = new JButton(entityName);
 
-            buildUnit.addActionListener(a -> {
-                Unit unit = EntityFactory.getInstance().train(entityName, humanController.playerID());
-                if (!gs.checkResource(humanController.playerID(), unit.getCost())) {
-                    return;
-                }
-                humanController.addBuildAction(new Train(unit));
-            });
+                buildUnit.addActionListener(a -> {
+                    Unit unit = ef.getUnit(entityName, humanController.playerID());
+                    if (!gs.checkResource(humanController.playerID(), unit.getCost())) {
+                        return;
+                    }
+                    humanController.addBuildAction(new Train(unit));
+                });
 
-            unitButtons.add(buildUnit);
-            sidePanel.add(unitButtons, c);
+                unitButtons.add(buildUnit);
+                sidePanel.add(unitButtons, c);
+            }
         }
 
         c.gridy++;
@@ -248,7 +253,7 @@ public class GUI extends JFrame {
      */
     public void render(GameState gs) {
         this.gs = gs;
-        this.grid = gs.getGrid();
+        this.grid = gs.grid();
 
         gameView.render(gs);
         infoView.render(gs);

@@ -1,5 +1,6 @@
 package core.action;
 
+import core.Constants;
 import core.game.GameState;
 
 /**
@@ -7,8 +8,25 @@ import core.game.GameState;
  */
 public class None extends Action {
 
+    private long duration;
+
+    public None() {
+        this.duration = 0;
+    }
+
+    public None(int idleSecond) {
+        this.duration = idleSecond * Constants.SECOND_NANO;
+    }
+
     @Override
     public void exec(GameState gs, double elapsed) {
+        duration -= elapsed;
+        if (duration > 0) {
+            // Building in progress
+            return;
+        }
+
+        isComplete = true;
     }
 
     @Override
@@ -23,6 +41,6 @@ public class None extends Action {
 
     @Override
     public boolean isComplete() {
-        return true;
+        return isComplete;
     }
 }

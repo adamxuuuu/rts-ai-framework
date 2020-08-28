@@ -5,6 +5,8 @@ import player.HumanAgent;
 import player.baseline.DoNothingAgent;
 import player.baseline.RandomAgent;
 import player.baseline.RandomBiasedAgent;
+import player.mc.MCParams;
+import player.mc.MonteCarloAgent;
 import util.WindowInput;
 
 /**
@@ -36,6 +38,7 @@ public class Start {
             case RANDOM -> player = new RandomAgent(System.currentTimeMillis());
             case DONOTHING -> player = new DoNothingAgent();
             case RANDOM_BIASED -> player = new RandomBiasedAgent(System.currentTimeMillis());
+            case MC -> player = new MonteCarloAgent(System.currentTimeMillis(), new MCParams());
         }
         return player;
     }
@@ -85,7 +88,9 @@ public class Start {
 //        Game g = init(new PlayerType[]{PlayerType.HUMAN, PlayerType.RANDOM});
 //        Game g = init(new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM});
 //        Game g = init(new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED});
-        Game g = init(new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM, PlayerType.RANDOM_BIASED, PlayerType.RANDOM});
+//        Game g = init(new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM, PlayerType.RANDOM_BIASED, PlayerType.RANDOM});
+//        Game g = init(new PlayerType[]{PlayerType.MC, PlayerType.MC});
+        Game g = init(new PlayerType[]{PlayerType.MC, PlayerType.MC, PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED});
         runGame(g);
     }
 

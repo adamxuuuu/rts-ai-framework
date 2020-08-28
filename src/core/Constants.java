@@ -6,8 +6,8 @@ import java.awt.*;
 
 public class Constants {
     // Default game settings
-    public static int GRID_SIZE = 30;
-    public static Color[] PLAYER_COLOR = new Color[]{Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW};
+    public static int GRID_SIZE = 20;
+    public static Color[] PLAYER_COLOR = new Color[]{Color.BLUE, Color.RED, Color.GREEN, Color.GRAY};
     public static Vector2d[] BASE_LOCATION = new Vector2d[]{
             new Vector2d(3, 3),
             new Vector2d(GRID_SIZE - 4, GRID_SIZE - 4),
@@ -22,7 +22,7 @@ public class Constants {
     public static final int STARTING_RESOURCE = 100;
 
     // FPS
-    public static int TARGET_TPS = 24;
+    public static int TARGET_TPS = 12;
     public static long SECOND_MILLI = (long) 1e6;
     public static long SECOND_NANO = (long) 1e9;
     public static long TIME_PER_TICK = SECOND_NANO / TARGET_TPS;

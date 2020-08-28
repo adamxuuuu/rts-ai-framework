@@ -3,6 +3,7 @@ package core.entity;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.OptionalInt;
 
 public class EntityFactory {
 
@@ -29,14 +30,14 @@ public class EntityFactory {
         loadBuildingTemplates();
     }
 
-    public Unit train(String name, int playerId) {
+    public Unit getUnit(String name, int playerId) {
         Unit unit = (Unit) unitTable.get(name).copy();
         unit.setAgentId(playerId);
         unit.setEntityId(Entity.nextId++);
         return unit;
     }
 
-    public Building build(String name, int playerId) {
+    public Building getBuilding(String name, int playerId) {
         Building building = (Building) buildingTable.get(name).copy();
         building.setAgentId(playerId);
         building.setEntityId(Entity.nextId++);
@@ -69,4 +70,8 @@ public class EntityFactory {
         }
     }
 
+    public int maxCost() {
+        OptionalInt max = unitTable.values().stream().mapToInt(Entity::getCost).max();
+        return max.orElse(0);
+    }
 }

@@ -26,7 +26,7 @@ public class Attack extends Action {
 
     @Override
     public void exec(GameState gs, double elapsed) {
-        Grid grid = gs.getGrid();
+        Grid grid = gs.grid();
         Unit attacker = grid.getUnit(attackerId);
         Entity target = grid.getEntity(targetId);
 

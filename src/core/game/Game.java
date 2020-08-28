@@ -55,13 +55,13 @@ public class Game {
         EntityFactory ef = EntityFactory.getInstance();
         for (int i = 0; i < numPlayers; i++) {
             int playerId = players[i].playerID();
-            Building base = ef.build("base", playerId);
+            Building base = ef.getBuilding("base", playerId);
             base.setGridPos(BASE_LOCATION[i]);
             if (!gs.addBuilding(base)) {
                 throw new IllegalArgumentException("Map does not have a base location");
             }
 
-            Unit worker = ef.train("worker", playerId);
+            Unit worker = ef.getUnit("worker", playerId);
             gs.addUnit(worker, BASE_LOCATION[i]);
 
             gs.handleResource(players[i].playerID(), Constants.STARTING_RESOURCE);
@@ -91,7 +91,7 @@ public class Game {
                 lag -= TIME_PER_TICK;
             }
 
-            int winnerId = gameOver();
+            int winnerId = gs.winnerId();
             if (winnerId != -1) {
                 //TODO Post game processing
                 System.out.println("Game Over! The winner is: " + players()[winnerId].toString());
@@ -100,6 +100,7 @@ public class Game {
             }
 
             // Render as fast as possible
+//            Runtime.getRuntime().gc();
             frame.render(gsCopy());
         }
     }
@@ -111,7 +112,7 @@ public class Game {
             if (pa == null) {
                 continue;
             }
-            gs.addPlayerAction(pa);
+            gs.assign(pa);
             // Reset for human controller
             if (agent instanceof HumanAgent) {
                 pa.reset();
@@ -122,10 +123,6 @@ public class Game {
         gs.tick(TIME_PER_TICK);
     }
 
-    public int gameOver() {
-        return gs.gameOver();
-    }
-
     private void postGameProcess() {
         // TODO add post game analyses
         gs.tick(0);
@@ -133,7 +130,7 @@ public class Game {
     }
 
     public int size() {
-        return gs.getGrid().size();
+        return gs.grid().size();
     }
 
     /**

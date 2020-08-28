@@ -29,7 +29,7 @@ public class HumanAgent extends Agent {
     }
 
     public void addBuildAction(Action candidate) {
-        playerAction.addBuildAction(candidate);
+        playerAction.addTrainAction(candidate);
     }
 
     public Map<Long, Action> getUnitActions() {
@@ -37,11 +37,11 @@ public class HumanAgent extends Agent {
     }
 
     public Action firstBuildAction() {
-        return playerAction.buildActions().peek();
+        return playerAction.trainActions().peek();
     }
 
     public Action removeFirstBuildAct() {
-        return playerAction.buildActions().poll();
+        return playerAction.trainActions().poll();
     }
 
 }

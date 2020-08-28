@@ -58,7 +58,7 @@ public class Grid {
         resources = new Resource[size][size];
 
         //---------- loading ----------//
-        randomMap();
+//        randomMap();
         generateTerrain();
         initResources();
     }
@@ -97,15 +97,12 @@ public class Grid {
         return enemy.orElse(null);
     }
 
-    public ArrayList<Entity> getEnemyInRange(Unit unit) {
-        ArrayList<Entity> enemies = entities().stream().filter(e ->
+    public ArrayList<Entity> getEnemyInSight(Unit unit) {
+        return entities().stream().filter(e ->
                 !(e instanceof Resource) &&
                         e.getAgentId() != unit.getAgentId() &&
-                        Vector2d.euclideanDistance(unit.getGridPos(), e.getGridPos()) < unit.getRange())
+                        Vector2d.euclideanDistance(unit.getGridPos(), e.getGridPos()) < unit.getRange() * 5)
                 .collect(Collectors.toCollection(ArrayList::new));
-
-
-        return enemies;
     }
 
     void addUnit(Unit addUnit) {
@@ -273,7 +270,7 @@ public class Grid {
      * Randomly generating height between -0.1 - 1
      */
     private void randomMap() {
-        int offset = size / 6;
+        int offset = size / 8;
         for (int i = offset; i < size - offset; i++) {
             for (int j = offset; j < size - offset; j++) {
                 heightMap[i][j] = Utils.nextFloatBetween((float) -0.1, 1);

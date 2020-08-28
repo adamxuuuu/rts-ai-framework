@@ -60,20 +60,20 @@ public class Unit extends Entity {
             return acts;
         }
 
-        Grid grid = gs.getGrid();
+        Grid grid = gs.grid();
         // Move actions
-        for (Vector2d pos : grid.findAllNearby(gridPos, 5)) {
+        for (Vector2d pos : grid.findAllNearby(gridPos, 2)) {
             acts.add(new Move(this, pos, grid));
         }
 
         // Attack and Harvest actions
-        if (this.type == Type.WORKER) {
+        if (type == Type.WORKER) {
             Resource res = grid.findNearestResource(gridPos);
             if (res != null) {
                 acts.add(new Harvest(entityId, res.entityId));
             }
         } else {
-            for (Entity enemy : grid.getEnemyInRange(this)) {
+            for (Entity enemy : grid.getEnemyInSight(this)) {
                 acts.add(new Attack(this.entityId, enemy.entityId));
             }
         }
