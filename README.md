@@ -2,7 +2,7 @@
 
 alphaRTS is a Java framework for AI research in real-time strategy game enviorment.
 
-![game screenshot](https://github.com/adamxuuuu/rts-ai-framework/blob/master/screenshots/mid.png)
+![](https://media.giphy.com/media/cO8NxS8cl4cqXEu0Oa/giphy.gif)
 
 ## Installation
 
