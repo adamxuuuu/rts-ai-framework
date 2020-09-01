@@ -3,7 +3,7 @@ package player;
 import core.action.Action;
 import core.action.Attack;
 import core.action.Harvest;
-import core.action.None;
+import core.action.Train;
 import core.entity.Unit;
 import core.game.GameState;
 
@@ -34,7 +34,7 @@ public class PlayerActionFactory {
         for (Unit u : gs.grid().getUnits(playerId)) {
             long uId = u.getEntityId();
             Action currentAct = gs.getUnitAction(uId);
-            if (currentAct == null || currentAct instanceof None) {
+            if (currentAct == null || currentAct instanceof Attack) {
                 List<Action> acts = u.calculateActions(gs);
                 if (acts.isEmpty()) {
                     continue;
@@ -90,7 +90,7 @@ public class PlayerActionFactory {
 
     private void addRandomTrainAction(PlayerAction pa, Random rnd) {
         if (!trainChoices.isEmpty()) {
-            pa.addTrainAction(trainChoices.remove(rnd.nextInt(trainChoices.size())));
+            pa.addTrainAction((Train) trainChoices.remove(rnd.nextInt(trainChoices.size())));
         }
     }
 

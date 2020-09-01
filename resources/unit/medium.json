@@ -3,7 +3,7 @@
   "name": "medium",
   "speed": 4,
   "range": 3,
-  "cost": 40,
+  "cost": 10,
   "maxHp": 30,
   "attack": 5,
   "buildTime": 2,

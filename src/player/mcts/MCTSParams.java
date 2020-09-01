@@ -12,6 +12,7 @@ public class MCTSParams extends ParameterSet {
     // Parameters
     public double K = Math.sqrt(2);
     public int ROLLOUT_LENGTH = 10;//10;
+    public boolean ROLOUTS_ENABLED = false;
 
     public void setParameterValue(String param, Object value) {
         switch (param) {

@@ -8,12 +8,17 @@ import core.entity.Unit;
 import player.Agent;
 import player.HumanAgent;
 import player.PlayerAction;
+import util.FPSCounter;
 
 import java.util.Random;
 
 import static core.Constants.*;
 
 public class Game {
+
+    private final static int RUN_MODE = 2; // 0: fast, 1: flexible, 2: fixed
+
+    enum GameMode {Annihilation, Survivor}
 
     // State of the game (objects, ticks, etc).
     private GameState gs;
@@ -26,6 +31,10 @@ public class Game {
     private Agent[] players;
     private int numPlayers;
 
+    private final FPSCounter fpsCounter = new FPSCounter();
+    private final GameMode gm = GameMode.Annihilation;
+
+
     /**
      * Default constructor
      */
@@ -36,7 +45,7 @@ public class Game {
      * Game initialisation
      */
     public void init(Agent[] players) {
-        this.gs = new GameState(new Grid(GRID_SIZE));
+        this.gs = new GameState(new Grid(GRID_SIZE), gm);
 
         this.seed = System.currentTimeMillis();
         this.rnd = new Random(seed);
@@ -64,7 +73,7 @@ public class Game {
             Unit worker = ef.getUnit("worker", playerId);
             gs.addUnit(worker, BASE_LOCATION[i]);
 
-            gs.handleResource(players[i].playerID(), Constants.STARTING_RESOURCE);
+            gs.changeResource(players[i].playerID(), Constants.STARTING_RESOURCE);
         }
     }
 
@@ -77,6 +86,7 @@ public class Game {
      */
     public void run(GUI frame) {
         // Main game loop
+        fpsCounter.start();
         long previous = System.nanoTime();
         long lag = 0;
         while (!frame.isClosed()) {
@@ -85,28 +95,51 @@ public class Game {
             previous = current;
             lag += elapsed;
 
-            // update at a fix time stamp
-            while (lag >= TIME_PER_TICK) {
-                tick();
-                lag -= TIME_PER_TICK;
-            }
+            lag -= _run(elapsed, lag);
 
             int winnerId = gs.winnerId();
             if (winnerId != -1) {
                 //TODO Post game processing
                 System.out.println("Game Over! The winner is: " + players()[winnerId].toString());
                 postGameProcess();
+                frame.render(gs.copy());
                 break;
             }
 
             // Render as fast as possible
+            frame.render(gs.copy());
 //            Runtime.getRuntime().gc();
-            frame.render(gsCopy());
         }
     }
 
-    private void tick() {
-        System.out.print("Current tick: " + gs.getTicks() + '\r');
+    // return the time updated
+    private long _run(long elapsed, long lag) {
+        long temp = lag;
+        if (RUN_MODE == 0) {
+            update(elapsed);
+            fpsCounter.incFrame();
+            return 0;
+        } else if (RUN_MODE == 1) {
+            if (lag >= NANO_PER_TICK) {
+                fpsCounter.incFrame();
+                update(lag);
+                return lag;
+            }
+        } else if (RUN_MODE == 2) {
+            int count = 0;
+            while (temp >= NANO_PER_TICK) {
+                fpsCounter.incFrame();
+                update(NANO_PER_TICK);
+                temp -= NANO_PER_TICK;
+                count++;
+            }
+            return count * NANO_PER_TICK;
+        }
+        throw new IllegalArgumentException("Run mode not supported, exiting..");
+    }
+
+    private void update(long elapsed) {
+        System.out.print("Current tick: " + gs.getTicks() + " TPS: " + fpsCounter.get() + '\r');
         for (Agent agent : players) {
             PlayerAction pa = agent.act(gs);
             if (pa == null) {
@@ -120,24 +153,18 @@ public class Game {
         }
 
         // Advance game state by 16ms
-        gs.tick(TIME_PER_TICK);
+        gs.tick(elapsed);
     }
 
     private void postGameProcess() {
         // TODO add post game analyses
         gs.tick(0);
+        fpsCounter.stop();
         System.out.println("Total tick: " + gs.getTicks());
     }
 
     public int size() {
         return gs.grid().size();
-    }
-
-    /**
-     * @return a copy of the current game state.
-     */
-    private GameState gsCopy() {
-        return gs.copy();
     }
 
     /**

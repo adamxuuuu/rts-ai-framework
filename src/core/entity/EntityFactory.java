@@ -32,15 +32,13 @@ public class EntityFactory {
 
     public Unit getUnit(String name, int playerId) {
         Unit unit = (Unit) unitTable.get(name).copy();
-        unit.setAgentId(playerId);
-        unit.setEntityId(Entity.nextId++);
+        unit.setPlayerId(playerId);
         return unit;
     }
 
     public Building getBuilding(String name, int playerId) {
         Building building = (Building) buildingTable.get(name).copy();
-        building.setAgentId(playerId);
-        building.setEntityId(Entity.nextId++);
+        building.setPlayerId(playerId);
         return building;
     }
 

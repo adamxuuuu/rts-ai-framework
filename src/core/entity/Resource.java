@@ -15,7 +15,7 @@ public class Resource extends Entity {
         switch (type) {
             case NORMAL -> {
                 maxHp = Constants.RESOURCE_NORM_CAP;
-                spriteKey = new String[]{"scifiEnvironment_9.png"};
+                spriteKey = new String[]{"scifiEnvironment_09.png"};
             }
             case RICH -> {
                 maxHp = Constants.RESOURCE_RICH_CAP;

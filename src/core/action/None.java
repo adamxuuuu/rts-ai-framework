@@ -22,7 +22,6 @@ public class None extends Action {
     public void exec(GameState gs, double elapsed) {
         duration -= elapsed;
         if (duration > 0) {
-            // Building in progress
             return;
         }
 
@@ -32,11 +31,6 @@ public class None extends Action {
     @Override
     public Action copy() {
         return new None();
-    }
-
-    @Override
-    public long actorId() {
-        return -1;
     }
 
     @Override

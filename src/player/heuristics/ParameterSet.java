@@ -1,7 +1,5 @@
 package player.heuristics;
 
-import core.Constants;
-
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -21,9 +19,8 @@ public abstract class ParameterSet {
     public int stop_type = STOP_TIME;
     public int num_iterations = 200;
     public int num_fmcalls = 100;
-    public long num_time = Constants.TIME_PER_TICK / 4;
-    public int FORCE_TURN_END = 5;
-    public boolean PRIORITIZE_ROOT = false;
+    public long num_time = 5;
+    public final int MAX_CHILDREN = 200;
 
 
     public abstract Object getParameterValue(String param);

@@ -1,20 +1,19 @@
 package core.game;
 
+import core.Constants;
 import core.action.Action;
 import core.action.Train;
 import core.entity.*;
 import player.PlayerAction;
+import player.PlayerActionFactory;
 import util.Vector2d;
 
 import java.util.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static core.Constants.TIME_PER_TICK;
+import static core.Constants.NANO_PER_TICK;
 
 public class GameState {
-
-    private static final Logger logger = Logger.getLogger(GameState.class.getName());
 
     /**
      * @see Grid
@@ -25,17 +24,21 @@ public class GameState {
     // UnitId <-> unit actions
     private Map<Long, Action> unitActions;
     // PlayerId <-> build actions
-    private Map<Integer, Queue<Action>> buildActions;
+    private Map<Integer, Train> trainActions;
     // PlayerId <-> resource storage
     private Map<Integer, Integer> playerResource;
+
+    private boolean isCopy = false;
+    private Game.GameMode gm;
 
     private GameState() {
     }
 
-    GameState(Grid grid) {
+    GameState(Grid grid, Game.GameMode gm) {
         this.grid = grid;
+        this.gm = gm;
         unitActions = new HashMap<>();
-        buildActions = new HashMap<>();
+        trainActions = new HashMap<>();
         playerResource = new HashMap<>();
     }
 
@@ -51,15 +54,28 @@ public class GameState {
      * @return the winner id or -1 if game not over
      */
     int winnerId() {
+        int winnerId = -1;
         Set<Integer> playerSet = grid.entities().stream()
                 .filter(e -> !(e instanceof Resource))
-                .mapToInt(Entity::getAgentId)
+                .mapToInt(Entity::getPlayerId)
                 .boxed()
                 .collect(Collectors.toSet());
-        if (playerSet.size() == 1) {
-            return playerSet.iterator().next();
+        boolean end = playerSet.size() == 1;
+
+        switch (gm) {
+            case Annihilation -> {
+                if (end) winnerId = playerSet.iterator().next();
+            }
+            case Survivor -> {
+                if (end) winnerId = playerSet.iterator().next();
+                if (ticks >= Constants.GAME_MAX_TICKS) {
+                    Optional<Map.Entry<Integer, Integer>> opEntry =
+                            playerResource.entrySet().stream().max(Map.Entry.comparingByValue());
+                    return opEntry.get().getKey();
+                }
+            }
         }
-        return -1;
+        return winnerId;
     }
 
     void tick(double elapsed) {
@@ -67,14 +83,14 @@ public class GameState {
 
         reloadUnits(elapsed);
 
-        // Execute build actions
-        for (Queue<Action> next : buildActions.values()) {
-            Action build = next.peek();
-            if (build != null) {
-                if (build.isComplete()) {
-                    next.poll();
+        // Execute train actions
+        for (Iterator<Train> it = trainActions.values().iterator(); it.hasNext(); ) {
+            Action next = it.next();
+            if (next != null) {
+                if (next.isComplete()) {
+                    it.remove();
                 } else {
-                    build.exec(this, elapsed);
+                    next.exec(this, elapsed);
                 }
             }
         }
@@ -119,7 +135,8 @@ public class GameState {
      */
     public GameState copy() {
         GameState copy = new GameState();
-
+        copy.isCopy = true;
+        copy.gm = gm;
         copy.grid = grid.copy();
         copy.ticks = ticks;
 
@@ -130,18 +147,17 @@ public class GameState {
         }
 
         // Copy build actions
-        copy.buildActions = new HashMap<>();
-        for (Map.Entry<Integer, Queue<Action>> entry : buildActions.entrySet()) {
-            Queue<Action> copyActions = new LinkedList<>();
-            for (Action action : entry.getValue()) {
-                copyActions.add(action.copy());
+        copy.trainActions = new HashMap<>();
+        for (Map.Entry<Integer, Train> entry : trainActions.entrySet()) {
+            if (entry.getValue() == null) {
+                continue;
             }
-            copy.buildActions.put(entry.getKey(), copyActions);
+            copy.trainActions.put(entry.getKey(), (Train) entry.getValue().copy());
         }
 
         copy.playerResource = new HashMap<>();
         for (Map.Entry<Integer, Integer> entry : playerResource.entrySet()) {
-            copy.playerResource.put(entry.getKey(), entry.getValue());
+            copy.playerResource.put(entry.getKey(), Integer.valueOf(entry.getValue()));
         }
 
         return copy;
@@ -157,7 +173,7 @@ public class GameState {
      * @param playerId player id
      * @param amount   positive for addition, negative for remove
      */
-    public void handleResource(int playerId, int amount) {
+    public void changeResource(int playerId, int amount) {
         playerResource.merge(playerId, amount, Integer::sum);
     }
 
@@ -175,6 +191,12 @@ public class GameState {
         return playerResource.getOrDefault(playerId, 0) >= amount;
     }
 
+    private void addEntity(Entity e, boolean isCopy) {
+        if (!isCopy) {
+            e.setEntityId(Entity.nextId++);
+        }
+    }
+
     /**
      * Only entry point for adding a building
      *
@@ -184,6 +206,7 @@ public class GameState {
         if (b == null) {
             return false;
         }
+        addEntity(b, isCopy);
         return grid.addBuilding(b);
     }
 
@@ -202,6 +225,7 @@ public class GameState {
             // TODO give indication to player
             return;
         }
+        addEntity(u, isCopy);
         grid.updateScreenPos(u, spawn);
         grid.addUnit(u);
     }
@@ -213,7 +237,7 @@ public class GameState {
         for (PlayerAction pa : pas) {
             assign(pa);
         }
-        tick(TIME_PER_TICK);
+        tick(NANO_PER_TICK);
     }
 
     /**
@@ -223,17 +247,16 @@ public class GameState {
      */
     public synchronized void assign(PlayerAction pa) {
         if (pa == null) {
+            // Should not be here
             System.err.println("A null action being assigned to game state");
             return;
         }
 
         int playerId = pa.playerId();
-        // Add build actions
-        Queue<Action> buildActs = buildActions.get(playerId);
-        if (buildActs == null) {
-            buildActions.put(playerId, new LinkedList<>(pa.trainActions()));
-        } else {
-            buildActs.addAll(pa.trainActions());
+        // Add train action
+        Action current = trainActions.get(playerId);
+        if (current == null) {
+            trainActions.put(playerId, pa.trainAction());
         }
 
         // Add unit actions
@@ -255,9 +278,9 @@ public class GameState {
 
         int resource = getResource(playerId);
         EntityFactory ef = EntityFactory.getInstance();
-        if (resource < ef.maxCost()) {
-            return acts;
-        }
+//        if (resource < ef.maxCost()) {
+//            return acts;
+//        }
         ef.unitTable.forEach((k, v) -> {
             if (resource >= v.getCost()) {
                 acts.add(new Train(ef.getUnit(k, playerId)));
@@ -271,5 +294,23 @@ public class GameState {
      */
     public int objectsCount() {
         return grid.entities().size();
+    }
+
+    public List<PlayerAction> sample(int playerId, int nActions, Random rnd) {
+        PlayerActionFactory factory = new PlayerActionFactory(this, playerId);
+        List<PlayerAction> actions = new ArrayList<>();
+        while (actions.size() < nActions) {
+            PlayerAction temp = factory.randomBiasedAction(rnd);
+            if (temp.empty()) {
+                break;
+            }
+            actions.add(temp);
+        }
+
+        if (actions.isEmpty()) {
+            actions.add(new PlayerAction(playerId));
+        }
+
+        return actions;
     }
 }

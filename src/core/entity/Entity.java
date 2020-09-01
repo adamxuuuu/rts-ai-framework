@@ -20,7 +20,7 @@ public abstract class Entity {
     /**
      * Id of the player this entity belongs to.
      */
-    protected int agentId = -1;
+    protected int playerId = -1;
 
     /**
      * Position of this entity in the grid
@@ -63,7 +63,7 @@ public abstract class Entity {
 
     public void copy(Entity copy) {
         copy.setEntityId(entityId);
-        copy.setAgentId(agentId);
+        copy.setPlayerId(playerId);
         copy.setName(name);
         copy.setGridPos(gridPos);
         copy.setScreenPos(screenPos);
@@ -100,25 +100,36 @@ public abstract class Entity {
         return currentHP <= 0;
     }
 
+    @Override
+    public String toString() {
+        return "Entity{" +
+                "entityId=" + entityId +
+                ", name='" + name + '\'' +
+                '}';
+    }
+
     //----------------------------Getter&Setter----------------------------//
 
     public long getEntityId() {
         return entityId;
     }
+
     public void setEntityId(long entityId) {
         this.entityId = entityId;
     }
 
-    public int getAgentId() {
-        return agentId;
+    public int getPlayerId() {
+        return playerId;
     }
-    public void setAgentId(int agentId) {
-        this.agentId = agentId;
+
+    public void setPlayerId(int playerId) {
+        this.playerId = playerId;
     }
 
     public Vector2d getGridPos() {
         return gridPos;
     }
+
     public void setGridPos(Vector2d gridPos) {
         this.gridPos = gridPos;
     }
@@ -126,6 +137,7 @@ public abstract class Entity {
     public Vector2d getScreenPos() {
         return screenPos;
     }
+
     public void setScreenPos(Vector2d screenPos) {
         this.screenPos = screenPos;
     }
@@ -133,6 +145,7 @@ public abstract class Entity {
     public long getBuildTime() {
         return buildTime;
     }
+
     public void setBuildTime(long buildTime) {
         this.buildTime = buildTime;
     }
@@ -140,6 +153,7 @@ public abstract class Entity {
     public int getCurrentHP() {
         return currentHP;
     }
+
     public void setCurrentHP(int currentHP) {
         this.currentHP = currentHP;
     }
@@ -147,6 +161,7 @@ public abstract class Entity {
     public int getMaxHp() {
         return maxHp;
     }
+
     public void setMaxHp(int maxHp) {
         this.maxHp = maxHp;
     }
@@ -154,6 +169,7 @@ public abstract class Entity {
     public void setCost(int cost) {
         this.cost = cost;
     }
+
     public int getCost() {
         return cost;
     }

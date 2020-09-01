@@ -62,7 +62,7 @@ public class Unit extends Entity {
 
         Grid grid = gs.grid();
         // Move actions
-        for (Vector2d pos : grid.findAllNearby(gridPos, 2)) {
+        for (Vector2d pos : grid.findAllNearby(gridPos, Constants.MOVE_RANGE)) {
             acts.add(new Move(this, pos, grid));
         }
 
@@ -73,7 +73,7 @@ public class Unit extends Entity {
                 acts.add(new Harvest(entityId, res.entityId));
             }
         } else {
-            for (Entity enemy : grid.getEnemyInSight(this)) {
+            for (Entity enemy : grid.getEnemyInSight(this, range * 2)) {
                 acts.add(new Attack(this.entityId, enemy.entityId));
             }
         }
@@ -150,4 +150,5 @@ public class Unit extends Entity {
     public int getCarry() {
         return carry;
     }
+
 }

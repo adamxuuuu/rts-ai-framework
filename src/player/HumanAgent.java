@@ -1,9 +1,8 @@
 package player;
 
 import core.action.Action;
+import core.action.Train;
 import core.game.GameState;
-
-import java.util.Map;
 
 public class HumanAgent extends Agent {
 
@@ -24,24 +23,12 @@ public class HumanAgent extends Agent {
         return new HumanAgent();
     }
 
-    public void addUnitAction(Action action) {
-        playerAction.addUnitAction(action.actorId(), action);
+    public void addUnitAction(long uId, Action action) {
+        playerAction.addUnitAction(uId, action);
     }
 
-    public void addBuildAction(Action candidate) {
+    public void addTrainAction(Train candidate) {
         playerAction.addTrainAction(candidate);
-    }
-
-    public Map<Long, Action> getUnitActions() {
-        return playerAction.unitActions();
-    }
-
-    public Action firstBuildAction() {
-        return playerAction.trainActions().peek();
-    }
-
-    public Action removeFirstBuildAct() {
-        return playerAction.trainActions().poll();
     }
 
 }

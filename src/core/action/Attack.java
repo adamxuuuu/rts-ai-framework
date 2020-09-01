@@ -61,8 +61,4 @@ public class Attack extends Action {
         return new Attack(attackerId, targetId);
     }
 
-    @Override
-    public long actorId() {
-        return attackerId;
-    }
 }

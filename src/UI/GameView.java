@@ -85,14 +85,21 @@ public class GameView extends JComponent {
             g.drawString("Resource: " + resource, offset, dimension.height - CELL_SIZE); //added line (step 5).
             offset += dimension.width / 4;
         }
-        // Count frames
-        g.setColor(Color.GREEN);
+        // Print frames
+        offset = 0;
+        g.setColor(Color.BLACK);
         fpsCounter.incFrame(); //added line (step 4).
         g.setFont(new Font("Arial", Font.BOLD, 25));
-        g.drawString("FPS: " + fpsCounter.get(), 0, dimension.height); //added line (step 5).
+        g.drawString("FPS: " + fpsCounter.get(), offset, dimension.height); //added line (step 5).
+        offset += dimension.width / 4;
 
-        // Count game objects
-        g.drawString("Gameobjects: " + gs.objectsCount(), dimension.width / 5, dimension.height); //added line (step 5).
+        // Print game objects
+        g.drawString("Objects: " + gs.objectsCount(), offset, dimension.height); //added line (step 5).
+        offset += dimension.width / 4;
+
+        // Print ticks
+        g.drawString("Ticks: " + gs.getTicks(), offset, dimension.height); //added line (step 5).
+        offset += dimension.width / 4;
     }
 
     private void drawGrid(Graphics2D g) {
@@ -171,7 +178,7 @@ public class GameView extends JComponent {
         if (e instanceof Resource || e instanceof Building) {
             return GUI.spriteSheet.getSubSprite(e.getSpriteKey()[0]);
         } else {
-            return GUI.spriteSheet.getSubSprite(e.getSpriteKey()[e.getAgentId()]);
+            return GUI.spriteSheet.getSubSprite(e.getSpriteKey()[e.getPlayerId()]);
         }
     }
 
@@ -185,7 +192,7 @@ public class GameView extends JComponent {
     }
 
     private void drawHealthBar(Graphics2D g, int x, int y, int barWidth) {
-        g.fillRect(x, y - CELL_SIZE / 2, barWidth, CELL_SIZE / 10);
+        g.fillRect(x, y - CELL_SIZE, barWidth, CELL_SIZE / 10);
     }
 
     /**

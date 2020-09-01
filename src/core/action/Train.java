@@ -17,7 +17,7 @@ public class Train extends Action {
     public Train(Unit unit) {
         this.unit = unit;
 
-        playerId = unit.getAgentId();
+        playerId = unit.getPlayerId();
         buildTime = unit.getBuildTime() * Constants.SECOND_NANO;
         costRemain = unit.getCost();
     }
@@ -37,10 +37,9 @@ public class Train extends Action {
             return;
         } else {
             // Handle cost reduction
-            gs.handleResource(playerId, -costRemain);
+            gs.changeResource(playerId, -costRemain);
             costRemain = 0;
         }
-
 
         buildTime -= elapsed;
         if (buildTime > 0) {
@@ -48,7 +47,7 @@ public class Train extends Action {
             return;
         }
 
-        Building source = gs.grid().getBuilding(unit.getAgentId(), Building.Type.BASE);
+        Building source = gs.grid().getBuilding(unit.getPlayerId(), Building.Type.BASE);
         if (source == null) {
             // Building got destroyed
             isComplete = true;
@@ -65,7 +64,10 @@ public class Train extends Action {
     }
 
     @Override
-    public long actorId() {
-        return 0;
+    public String toString() {
+        return "Train{" +
+                "unit=" + unit +
+                ", playerId=" + playerId +
+                '}';
     }
 }

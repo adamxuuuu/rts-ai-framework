@@ -42,7 +42,7 @@ public class Harvest extends Action {
 
         // Return to base
         if (harvester.isFull()) {
-            int playerId = harvester.getAgentId();
+            int playerId = harvester.getPlayerId();
             Building base = grid.getBuilding(playerId, Building.Type.BASE);
             if (base == null) {
                 isComplete = true;
@@ -56,7 +56,7 @@ public class Harvest extends Action {
             path = pf.pathTo(dest, grid);
             boolean atBase = Pathfinder.move(grid, path, dest, harvester);
             if (atBase) {
-                gs.handleResource(playerId, harvester.getCarry());
+                gs.changeResource(playerId, harvester.getCarry());
                 harvester.dump();
             } else {
                 return;
@@ -97,8 +97,4 @@ public class Harvest extends Action {
         return new Harvest(workerId);
     }
 
-    @Override
-    public long actorId() {
-        return workerId;
-    }
 }

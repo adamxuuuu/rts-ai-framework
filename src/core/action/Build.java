@@ -6,7 +6,6 @@ public class Build extends Action {
 
     @Override
     public void exec(GameState gs, double elapsed) {
-
     }
 
     @Override
@@ -14,8 +13,4 @@ public class Build extends Action {
         return null;
     }
 
-    @Override
-    public long actorId() {
-        return 0;
-    }
 }

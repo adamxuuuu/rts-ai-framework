@@ -15,8 +15,6 @@ public abstract class Action {
 
     public abstract Action copy();
 
-    public abstract long actorId();
-
     public boolean isComplete() {
         return isComplete;
     }

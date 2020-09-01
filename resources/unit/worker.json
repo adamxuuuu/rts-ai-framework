@@ -3,7 +3,7 @@
   "name": "worker",
   "speed": 3,
   "range": 0,
-  "cost": 50,
+  "cost": 20,
   "maxHp": 50,
   "attack": 2,
   "buildTime": 3,

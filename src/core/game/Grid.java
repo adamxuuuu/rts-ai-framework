@@ -58,7 +58,7 @@ public class Grid {
         resources = new Resource[size][size];
 
         //---------- loading ----------//
-//        randomMap();
+        randomMap();
         generateTerrain();
         initResources();
     }
@@ -89,19 +89,19 @@ public class Grid {
 
     public Entity getEnemyAt(int playerId, Vector2d gp) {
         Building b = getBuildingAt(gp.x, gp.y);
-        if (b != null && b.getAgentId() != playerId) {
+        if (b != null && b.getPlayerId() != playerId) {
             return b;
         }
 
-        Optional<Unit> enemy = units().stream().filter(u -> u.getGridPos().equals(gp) && u.getAgentId() != playerId).findFirst();
+        Optional<Unit> enemy = units().stream().filter(u -> u.getGridPos().equals(gp) && u.getPlayerId() != playerId).findFirst();
         return enemy.orElse(null);
     }
 
-    public ArrayList<Entity> getEnemyInSight(Unit unit) {
+    public ArrayList<Entity> getEnemyInSight(Unit unit, int range) {
         return entities().stream().filter(e ->
                 !(e instanceof Resource) &&
-                        e.getAgentId() != unit.getAgentId() &&
-                        Vector2d.euclideanDistance(unit.getGridPos(), e.getGridPos()) < unit.getRange() * 5)
+                        e.getPlayerId() != unit.getPlayerId() &&
+                        Vector2d.euclideanDistance(unit.getGridPos(), e.getGridPos()) < range)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
@@ -210,7 +210,7 @@ public class Grid {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 Building b = getBuildingAt(i, j);
-                if (b != null && b.getType() == bt && b.getAgentId() == playerId) {
+                if (b != null && b.getType() == bt && b.getPlayerId() == playerId) {
                     return b;
                 }
             }
@@ -270,7 +270,7 @@ public class Grid {
      * Randomly generating height between -0.1 - 1
      */
     private void randomMap() {
-        int offset = size / 8;
+        int offset = size / 3;
         for (int i = offset; i < size - offset; i++) {
             for (int j = offset; j < size - offset; j++) {
                 heightMap[i][j] = Utils.nextFloatBetween((float) -0.1, 1);
@@ -301,7 +301,7 @@ public class Grid {
      */
     private void initResources() {
         for (Vector2d loc : Constants.RESOURCE_LOCATION) {
-            Resource resource = new Resource(Resource.Type.RICH);
+            Resource resource = new Resource(Resource.Type.NORMAL);
             resource.setGridPos(loc);
             resources[loc.x][loc.y] = resource;
             entityMap.put(resource.getEntityId(), resource);
@@ -315,7 +315,7 @@ public class Grid {
      * @return all the units or am empty list
      */
     public List<Unit> getUnits(int playerId) {
-        return unitMap.values().stream().filter(unit -> unit.getAgentId() == playerId).collect(Collectors.toList());
+        return unitMap.values().stream().filter(unit -> unit.getPlayerId() == playerId).collect(Collectors.toList());
     }
 
     public Collection<Unit> units() {
@@ -336,7 +336,7 @@ public class Grid {
      */
     public long selectUnitId(int playerId, Vector2d sp) {
         for (Unit u : unitMap.values()) {
-            if (playerId != u.getAgentId()) {
+            if (playerId != u.getPlayerId()) {
                 continue;
             }
             if (u.getScreenPos().equalsPlusError(sp, Constants.CELL_SIZE / 2.0)) {
@@ -357,7 +357,7 @@ public class Grid {
     public ArrayList<Long> selectUnitIds(int playerId, Vector2d start, Vector2d end) {
         ArrayList<Long> res = new ArrayList<>();
         for (Unit u : unitMap.values()) {
-            if (playerId != u.getAgentId()) {
+            if (playerId != u.getPlayerId()) {
                 continue;
             }
             Vector2d sp = u.getScreenPos();

@@ -46,8 +46,4 @@ public class Move extends Action {
         return new Move(unitId, gridDest, path);
     }
 
-    @Override
-    public long actorId() {
-        return unitId;
-    }
 }

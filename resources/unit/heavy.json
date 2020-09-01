@@ -3,7 +3,7 @@
   "name": "heavy",
   "speed": 1,
   "range": 5,
-  "cost": 60,
+  "cost": 15,
   "maxHp": 50,
   "attack": 10,
   "buildTime": 3,

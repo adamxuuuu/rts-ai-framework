@@ -1,38 +1,37 @@
 package player;
 
 import core.action.Action;
+import core.action.Train;
 
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerAction {
 
     private final int playerId;
-    private final Map<Long, Action> unitActions;
-    private final Queue<Action> trainActions;
+    private Map<Long, Action> unitActions;
+    private Train trainAction;
 
     public PlayerAction(int playerId) {
         this.playerId = playerId;
         unitActions = new ConcurrentHashMap<>();
-        trainActions = new LinkedList<>();
+        trainAction = null;
     }
 
     void addUnitAction(long uId, Action action) {
         unitActions.put(uId, action);
     }
 
-    void addTrainAction(Action action) {
-        trainActions.add(action);
+    void addTrainAction(Train action) {
+        trainAction = action;
     }
 
     public Map<Long, Action> unitActions() {
         return unitActions;
     }
 
-    public Queue<Action> trainActions() {
-        return trainActions;
+    public Train trainAction() {
+        return trainAction;
     }
 
     public int playerId() {
@@ -41,18 +40,31 @@ public class PlayerAction {
 
     public void reset() {
         unitActions.clear();
-        trainActions.clear();
+        trainAction = null;
     }
 
     public boolean empty() {
-        return unitActions.isEmpty() && trainActions.isEmpty();
+        return unitActions.isEmpty() && trainAction == null;
+    }
+
+    public PlayerAction copy() {
+        PlayerAction copy = new PlayerAction(playerId);
+
+        copy.unitActions = new ConcurrentHashMap<>();
+        for (Map.Entry<Long, Action> entry : unitActions.entrySet()) {
+            copy.unitActions.put(entry.getKey(), entry.getValue().copy());
+        }
+
+        copy.trainAction = trainAction == null ? null : (Train) trainAction.copy();
+
+        return copy;
     }
 
     @Override
     public String toString() {
         return "PlayerAction{" +
                 "unitActions=" + unitActions +
-                ", trainActions=" + trainActions +
+                ", trainAction=" + trainAction +
                 '}';
     }
 }

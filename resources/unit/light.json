@@ -3,7 +3,7 @@
   "name": "light",
   "speed": 2,
   "range": 2,
-  "cost": 10,
+  "cost": 5,
   "maxHp": 10,
   "attack": 2,
   "buildTime": 1,

@@ -157,12 +157,12 @@ public class GUI extends JFrame {
                                     // Add a move action to the human player's action map
                                     toExecute = new Move(grid.getUnit(uId), allocations.pop(), grid);
                                 }
-                                humanController.addUnitAction(toExecute);
+                                humanController.addUnitAction(uId, toExecute);
                             }
                         } else {
                             for (long uId : selected) {
                                 // Add a attack action to the human player's action map
-                                humanController.addUnitAction(new Attack(uId, enemy.getEntityId()));
+                                humanController.addUnitAction(uId, new Attack(uId, enemy.getEntityId()));
                             }
                         }
                     }
@@ -232,7 +232,7 @@ public class GUI extends JFrame {
                     if (!gs.checkResource(humanController.playerID(), unit.getCost())) {
                         return;
                     }
-                    humanController.addBuildAction(new Train(unit));
+                    humanController.addTrainAction(new Train(unit));
                 });
 
                 unitButtons.add(buildUnit);

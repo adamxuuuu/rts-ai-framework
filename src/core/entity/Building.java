@@ -26,7 +26,7 @@ public class Building extends Entity {
     public Entity copy() {
         Building copy = new Building(type);
         copy.setEntityId(entityId);
-        copy.setAgentId(agentId);
+        copy.setPlayerId(playerId);
         copy.setGridPos(gridPos);
         copy.setSpriteKey(spriteKey);
         copy.setCurrentHP(currentHP);
