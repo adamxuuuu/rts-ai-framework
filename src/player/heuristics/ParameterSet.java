@@ -19,7 +19,7 @@ public abstract class ParameterSet {
     public int stop_type = STOP_TIME;
     public int num_iterations = 200;
     public int num_fmcalls = 100;
-    public long num_time = 5;
+    public long num_time = 1;
     public final int MAX_CHILDREN = 200;
 
 

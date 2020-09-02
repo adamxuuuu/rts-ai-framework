@@ -1,5 +1,6 @@
 import UI.GUI;
 import core.game.Game;
+import core.game.GameSummary;
 import player.Agent;
 import player.HumanAgent;
 import player.baseline.DoNothingAgent;
@@ -9,10 +10,15 @@ import player.mc.MonteCarloAgent;
 import player.mcts.MCTSAgent;
 import util.WindowInput;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Entry point
  */
 public class Start {
+    private static final int TOTAL_GAME_PLAYS = 50;
 
     enum PlayerType {
         DONOTHING,
@@ -77,26 +83,48 @@ public class Start {
         return g;
     }
 
-    private static void runGame(Game g) {
+    private static GameSummary runGame(Game g) {
         WindowInput wi = new WindowInput();
         wi.windowClosed = false;
         GUI frame = new GUI(g, "genRTS", wi, true, g.humanController());
         frame.addWindowListener(wi);
 
         g.run(frame);
+        return g.summary();
     }
 
     public static void main(String[] args) {
-//        Game g = init(new PlayerType[]{PlayerType.HUMAN, PlayerType.RANDOM});
-//        Game g = init(new PlayerType[]{PlayerType.MC, PlayerType.DONOTHING});
-//        Game g = init(new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM});
-//        Game g = init(new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED});
-//        Game g = init(new PlayerType[]{PlayerType.MC, PlayerType.RANDOM_BIASED});
-//        Game g = init(new PlayerType[]{PlayerType.HUMAN, PlayerType.MCTS});
-//        Game g = init(new PlayerType[]{PlayerType.HUMAN, PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED});
-        Game g = init(new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED});
-//        Game g = init(new PlayerType[]{PlayerType.MC, PlayerType.MC, PlayerType.MC, PlayerType.MC});
-        runGame(g);
+        int[] tickPerGame = new int[TOTAL_GAME_PLAYS];
+        Map<Integer, Integer> winnerMap = new HashMap<>();
+
+//        PlayerType[] players = new PlayerType[]{PlayerType.HUMAN, PlayerType.RANDOM};
+//        PlayerType[] players = new PlayerType[]{PlayerType.HUMAN, PlayerType.MCTS};
+//        PlayerType[] players = new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED};
+//        PlayerType[] players = new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM};
+//        PlayerType[] players = new PlayerType[]{PlayerType.MC, PlayerType.DONOTHING};
+//        PlayerType[] players = new PlayerType[]{PlayerType.MC, PlayerType.RANDOM_BIASED};
+//        PlayerType[] players = new PlayerType[]{PlayerType.RANDOM, PlayerType.RANDOM, PlayerType.RANDOM, PlayerType.RANDOM};
+//        PlayerType[] players = new PlayerType[]{PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED, PlayerType.RANDOM_BIASED};
+//        PlayerType[] players = new PlayerType[]{PlayerType.MC, PlayerType.MC, PlayerType.MC, PlayerType.MC};
+//        PlayerType[] players = new PlayerType[]{PlayerType.MCTS, PlayerType.MCTS, PlayerType.MCTS, PlayerType.MCTS};
+        PlayerType[] players = new PlayerType[]{PlayerType.RANDOM, PlayerType.RANDOM_BIASED, PlayerType.MC, PlayerType.MCTS};
+
+        for (int i = 0; i < TOTAL_GAME_PLAYS; i++) {
+            System.out.println("Running game number: " + i);
+            Game g = init(players);
+            GameSummary gameSummary = runGame(g);
+
+            tickPerGame[i] = gameSummary.totalTick;
+            winnerMap.merge(gameSummary.winner.playerId, 1, Integer::sum);
+
+            // I think we need GC here
+            Runtime.getRuntime().gc();
+        }
+
+        System.out.println();
+        System.out.println(Arrays.toString(tickPerGame));
+        System.out.println(winnerMap);
+        System.exit(0);
     }
 
 }

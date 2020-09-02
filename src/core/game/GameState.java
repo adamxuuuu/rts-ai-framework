@@ -60,20 +60,23 @@ public class GameState {
                 .mapToInt(Entity::getPlayerId)
                 .boxed()
                 .collect(Collectors.toSet());
-        boolean end = playerSet.size() == 1;
-
+        boolean end = playerSet.size() == 1 || playerSet.size() == 0;
+        if (end) {
+            winnerId = playerSet.size() == 0 ? -2 : playerSet.iterator().next();
+            return winnerId;
+        }
         switch (gm) {
             case Annihilation -> {
-                if (end) winnerId = playerSet.iterator().next();
+                if (ticks >= Constants.GAME_MAX_TICKS) return playerSet.iterator().next();
             }
             case Survivor -> {
-                if (end) winnerId = playerSet.iterator().next();
                 if (ticks >= Constants.GAME_MAX_TICKS) {
                     Optional<Map.Entry<Integer, Integer>> opEntry =
                             playerResource.entrySet().stream().max(Map.Entry.comparingByValue());
-                    return opEntry.get().getKey();
+                    return opEntry.orElseThrow().getKey();
                 }
             }
+            default -> throw new IllegalArgumentException("Game mode not supported...");
         }
         return winnerId;
     }

@@ -16,22 +16,23 @@ import static core.Constants.*;
 
 public class Game {
 
-    private final static int RUN_MODE = 2; // 0: fast, 1: flexible, 2: fixed
-
     enum GameMode {Annihilation, Survivor}
 
+    private final static int RUN_MODE = 1; // 0: fast, 1: flexible, 2: fixed
     // State of the game (objects, ticks, etc).
-    private GameState gs;
 
+    private GameState gs;
     // Seed for the game
+
     private long seed;
     private Random rnd;
-
     // List of players
+
     private Agent[] players;
     private int numPlayers;
-
     private final FPSCounter fpsCounter = new FPSCounter();
+
+    private final GameSummary gameSummary = new GameSummary();
     private final GameMode gm = GameMode.Annihilation;
 
 
@@ -79,10 +80,9 @@ public class Game {
 
 
     /**
-     * Main game loop, Update at a fix rate (16ms).
-     * Render as fast as it can
+     * Main game loop
      *
-     * @param frame the game graphical interface
+     * @param frame {@link GUI}
      */
     public void run(GUI frame) {
         // Main game loop
@@ -97,12 +97,14 @@ public class Game {
 
             lag -= _run(elapsed, lag);
 
+            // Check game termination
             int winnerId = gs.winnerId();
             if (winnerId != -1) {
                 //TODO Post game processing
-                System.out.println("Game Over! The winner is: " + players()[winnerId].toString());
-                postGameProcess();
-                frame.render(gs.copy());
+                postGameProcess(frame, winnerId);
+
+                // Close frame in the end
+                frame.dispose();
                 break;
             }
 
@@ -113,17 +115,19 @@ public class Game {
     }
 
     // return the time updated
+
     private long _run(long elapsed, long lag) {
         long temp = lag;
+        long res = 0L;
         if (RUN_MODE == 0) {
             update(elapsed);
             fpsCounter.incFrame();
-            return 0;
+            res = 0;
         } else if (RUN_MODE == 1) {
             if (lag >= NANO_PER_TICK) {
                 fpsCounter.incFrame();
                 update(lag);
-                return lag;
+                res = 0;
             }
         } else if (RUN_MODE == 2) {
             int count = 0;
@@ -133,11 +137,13 @@ public class Game {
                 temp -= NANO_PER_TICK;
                 count++;
             }
-            return count * NANO_PER_TICK;
+            res = count * NANO_PER_TICK;
+        } else {
+            throw new IllegalArgumentException("Run mode not supported, exiting..");
         }
-        throw new IllegalArgumentException("Run mode not supported, exiting..");
-    }
 
+        return res;
+    }
     private void update(long elapsed) {
         System.out.print("Current tick: " + gs.getTicks() + " TPS: " + fpsCounter.get() + '\r');
         for (Agent agent : players) {
@@ -156,11 +162,15 @@ public class Game {
         gs.tick(elapsed);
     }
 
-    private void postGameProcess() {
+    private void postGameProcess(GUI frame, int winnerId) {
         // TODO add post game analyses
+        // Do one last draw to clear board
         gs.tick(0);
+        frame.render(gs.copy());
+
         fpsCounter.stop();
-        System.out.println("Total tick: " + gs.getTicks());
+        gameSummary.conclude(gs.getTicks(), players()[winnerId]);
+
     }
 
     public int size() {
@@ -181,5 +191,9 @@ public class Game {
 
     public Agent[] players() {
         return players;
+    }
+
+    public GameSummary summary() {
+        return gameSummary;
     }
 }
